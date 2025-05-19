@@ -11,3 +11,5 @@ redis==4.3.4
 celery==5.2.7
 apscheduler==3.9.1
 gunicorn==20.1.0
+celery = Celery('tasks', broker=os.environ.get('REDIS_URL'))
+celery.conf.broker_pool_limit = 2  # 연결 풀 제한 (기본값 10)
