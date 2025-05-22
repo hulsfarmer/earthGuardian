@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Guardian - Report Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="block">
+                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                    <p class="mt-2">Environmental News</p>
+                </a>
+                <nav class="flex space-x-6">
+                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-newspaper mr-2"></i>
+                        News
+                    </a>
+                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Trends
+                    </a>
+                    <a href="/reports" class="px-4 py-2 rounded-md bg-green-800 font-bold flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        Reports
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-8">
+        <a href="/reports" class="inline-block mb-6 text-green-700 hover:underline"><i class="fas fa-arrow-left mr-2"></i>리포트 목록으로</a>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ report_type|capitalize }} 리포트 - {{ date_str }}</h1>
+        {% if not report %}
+            <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+                <p>리포트 데이터가 없습니다.</p>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <table class="min-w-full">
+                    <tr><th class="text-left py-2 px-4 text-gray-700">기간</th><td class="py-2 px-4">{{ report.period }}</td></tr>
+                    <tr><th class="text-left py-2 px-4 text-gray-700">생성일</th><td class="py-2 px-4">{{ report.generated_at }}</td></tr>
+                    <tr><th class="text-left py-2 px-4 text-gray-700">총 뉴스 수</th><td class="py-2 px-4">{{ report.total_news }}</td></tr>
+                </table>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-key mr-2"></i>주요 키워드</h2>
+                <ul class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {% for kw in report.top_keywords %}
+                    <li class="bg-green-100 text-green-800 rounded px-3 py-1 inline-block">{{ kw.keyword }} <span class="font-bold">({{ kw.count }})</span></li>
+                    {% else %}
+                    <li class="text-gray-400">키워드 없음</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-list mr-2"></i>뉴스 샘플</h2>
+                <ul class="divide-y divide-gray-200">
+                    {% for item in report.sample_news %}
+                    <li class="py-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <strong class="text-lg text-green-800">{{ item.title }}</strong>
+                                <div class="text-sm text-gray-500 mb-1">{{ item.published }} | {{ item.source }}</div>
+                                <div class="text-gray-700 mb-2">{{ item.summary }}</div>
+                                <a href="{{ item.link }}" target="_blank" class="text-green-600 hover:underline">기사 보기 <i class="fas fa-external-link-alt text-xs"></i></a>
+                            </div>
+                            <div class="mt-2 md:mt-0 md:ml-6">
+                                <span class="inline-block bg-gray-200 text-gray-700 rounded px-2 py-1 text-xs">{{ item.category }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="text-gray-400">뉴스 샘플 없음</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </main>
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Earth Guardian. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html> 
