@@ -10,17 +10,17 @@
 <body class="bg-gray-100">
     <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <a href="/" class="block">
-                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
-                    <p class="mt-2">Environmental News</p>
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <a href="/" class="mb-2 md:mb-0 block">
+                    <h1 class="text-2xl md:text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                    <p class="mt-1 md:mt-2 text-sm md:text-base">Environmental News</p>
                 </a>
-                <nav class="flex space-x-6">
-                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                <nav class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">
+                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
                         <i class="fas fa-newspaper mr-2"></i>
                         News
                     </a>
-                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
                         <i class="fas fa-chart-line mr-2"></i>
                         Trends
                     </a>
@@ -32,39 +32,57 @@
             </div>
         </div>
     </header>
-    <main class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">리포트 목록</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <main class="container mx-auto px-2 sm:px-4 py-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8 text-center">Report List</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- 일일 리포트 -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-day mr-2"></i>일일 리포트</h2>
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold text-green-700 mb-4 flex items-center">
+                    <i class="fas fa-calendar-day mr-2"></i>Daily Reports
+                </h2>
                 <ul>
                     {% for key in daily_keys %}
-                    <li class="mb-2"><a href="/reports/day?date={{ '-'.join(key.split('-')[1:])| trim }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2 break-all">
+                        <a href="/reports/day?date={{ '-'.join(key.split('-')[1:])|trim }}" class="text-green-600 hover:underline">
+                            {{ key }}
+                        </a>
+                    </li>
                     {% else %}
-                    <li class="text-gray-400">리포트 없음</li>
+                    <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
                 </ul>
             </div>
             <!-- 주간 리포트 -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-week mr-2"></i>주간 리포트</h2>
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold text-green-700 mb-4 flex items-center">
+                    <i class="fas fa-calendar-week mr-2"></i>Weekly Reports
+                </h2>
                 <ul>
                     {% for key in weekly_keys %}
-                    <li class="mb-2"><a href="/reports/week?date={{ '-'.join(key.split('-')[1:])| trim }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2 break-all">
+                        <a href="/reports/week?date={{ '-'.join(key.split('-')[1:])|trim }}" class="text-green-600 hover:underline">
+                            {{ key }}
+                        </a>
+                    </li>
                     {% else %}
-                    <li class="text-gray-400">리포트 없음</li>
+                    <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
                 </ul>
             </div>
             <!-- 월간 리포트 -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-alt mr-2"></i>월간 리포트</h2>
+            <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <h2 class="text-lg md:text-xl font-semibold text-green-700 mb-4 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>Monthly Reports
+                </h2>
                 <ul>
                     {% for key in monthly_keys %}
-                    <li class="mb-2"><a href="/reports/month?date={{ '-'.join(key.split('-')[1:])| trim }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2 break-all">
+                        <a href="/reports/month?date={{ '-'.join(key.split('-')[1:])|trim }}" class="text-green-600 hover:underline">
+                            {{ key }}
+                        </a>
+                    </li>
                     {% else %}
-                    <li class="text-gray-400">리포트 없음</li>
+                    <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -76,4 +94,4 @@
         </div>
     </footer>
 </body>
-</html> 
+</html>
