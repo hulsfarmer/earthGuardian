@@ -41,11 +41,23 @@ def get_report(report_type, date_str):
     raw = r.get(key)
     if raw:
         try:
-            return pickle.loads(raw)
+            # Redis는 bytes로 반환하므로, 디코딩
+            # (파이썬 3.x 기준)
+            text = raw.decode() if isinstance(raw, bytes) else raw
+            try:
+                # 1. pickle 시도
+                return pickle.loads(raw)
+            except Exception:
+                try:
+                    # 2. JSON 시도
+                    import json
+                    return json.loads(text)
+                except Exception:
+                    # 3. 그냥 텍스트(plain string)로 반환
+                    return text
         except Exception:
-            # 혹시 JSON 등 다른 포맷일 경우
-            import json
-            return json.loads(raw)
+            # 완전히 실패하면 None
+            return None
     return None
 
 # Removed functions: get_last_sunday, get_week_of_month, generate_periodic_report, generate_weekly_reports, generate_monthly_reports, generate_2025_reports, generate_daily_report, generate_daily_report_with_fallback, generate_weekly_report, generate_monthly_report 
