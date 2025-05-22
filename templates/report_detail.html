@@ -41,7 +41,7 @@
             </div>
         {% else %}
             <div class="bg-white rounded-lg shadow-md p-8 text-gray-700">
-                <p>{{ report }}</p>
+                <div class="prose max-w-none">{{ report|safe }}</div>
             </div>
         {% endif %}
     </main>
