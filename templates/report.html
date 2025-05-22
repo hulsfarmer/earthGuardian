@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Report</h1>
+    {% if report %}
+        <h2>{{ report.type }} Report</h2>
+        <p><strong>Period:</strong> {{ report.start_date }} to {{ report.end_date }}</p>
+        <p><strong>Generated at:</strong> {{ report.generated_at }}</p>
+        <h3>Summary</h3>
+        <p>{{ report.summary }}</p>
+        <h3>Articles</h3>
+        <ul>
+            {% for article in report.articles %}
+                <li>
+                    <a href="{{ article.link }}" target="_blank">{{ article.title }}</a>
+                    <p>{{ article.summary }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Report not ready yet. Please check back later.</p>
+    {% endif %}
+</body>
+</html> 
