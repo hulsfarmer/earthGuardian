@@ -204,6 +204,14 @@ def get_news():
     
     # 날짜순으로 정렬
     all_news.sort(key=lambda x: parser.parse(x['published']), reverse=True)
+
+    # 오래된 뉴스(7일 이전) 필터링
+    cutoff_date = datetime.now() - timedelta(days=7)
+    all_news = [item for item in all_news if parser.parse(item['published']) > cutoff_date]
+
+    # 최대 개수 제한
+    MAX_NEWS_COUNT = 300
+    all_news = all_news[:MAX_NEWS_COUNT]
     
     # 캐시 업데이트
     cache.set('news_data', all_news)
@@ -279,6 +287,10 @@ def analyze_trends(news_items, period='weekly'):
                 continue
         
         logger.info(f"Found {len(recent_news)} news items in the period")
+
+        # 최근 뉴스 개수 제한
+        if len(recent_news) > 300:
+            recent_news = recent_news[:300]
         
         if not recent_news:
             logger.warning("No news items found in the specified period")
