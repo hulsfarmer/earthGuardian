@@ -16,6 +16,7 @@ import nltk
 from celery import Celery
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
+from report import list_report_keys, get_report
 
 app = Flask(__name__)
 
@@ -452,6 +453,25 @@ def get_trends():
 def trends_page():
     """트렌드 리포트 페이지"""
     return render_template('trends.html')
+
+@app.route('/reports')
+def reports():
+    daily_keys = list_report_keys('day')
+    weekly_keys = list_report_keys('week')
+    monthly_keys = list_report_keys('month')
+    return render_template('reports.html',
+                          daily_keys=daily_keys,
+                          weekly_keys=weekly_keys,
+                          monthly_keys=monthly_keys)
+
+@app.route('/reports/<report_type>')
+def report_detail(report_type):
+    date_str = request.args.get('date')
+    report = get_report(report_type, date_str)
+    return render_template('report_detail.html',
+                          report=report,
+                          report_type=report_type,
+                          date_str=date_str)
 
 if __name__ == '__main__':
     # NLTK 데이터 다운로드
