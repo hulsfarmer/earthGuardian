@@ -33,11 +33,11 @@
         </div>
     </header>
     <main class="container mx-auto px-4 py-8">
-        <a href="/reports" class="inline-block mb-6 text-green-700 hover:underline"><i class="fas fa-arrow-left mr-2"></i>리포트 목록으로</a>
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ report_type|capitalize }} 리포트 - {{ date_str }}</h1>
+        <a href="/reports" class="inline-block mb-6 text-green-700 hover:underline"><i class="fas fa-arrow-left mr-2"></i>Back to reports </a>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ report_type|capitalize }} REPORT - {{ date_str }}</h1>
         {% if not report %}
             <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                <p>리포트 데이터가 없습니다.</p>
+                <p>There is no report data available.</p>
             </div>
         {% else %}
             <div class="bg-white rounded-lg shadow-md p-8 text-gray-700">
