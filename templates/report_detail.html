@@ -41,7 +41,14 @@
             </div>
         {% else %}
             <div class="bg-white rounded-lg shadow-md p-8 text-gray-700">
-                <div class="prose">{{ report|safe }}</div>
+                <div class="markdown-body" style="line-height: 1.8; font-size: 1.05rem;">
+                  {{ report|safe }}
+                </div>
+                <style>
+                    .markdown-body p { margin-top: 1.2em; margin-bottom: 1.2em; }
+                    .markdown-body h2, .markdown-body h3, .markdown-body h4 { margin-top: 2em; margin-bottom: 1em; }
+                    .markdown-body ul, .markdown-body ol { margin-top: 1em; margin-bottom: 1em; }
+                </style>
             </div>
         {% endif %}
     </main>
