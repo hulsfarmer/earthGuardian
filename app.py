@@ -17,6 +17,7 @@ from celery import Celery
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from report import list_report_keys, get_report
+import markdown
 
 app = Flask(__name__)
 
@@ -468,10 +469,22 @@ def reports():
 def report_detail(report_type):
     date_str = request.args.get('date')
     report = get_report(report_type, date_str)
-    return render_template('report_detail.html',
-                          report=report,
-                          report_type=report_type,
-                          date_str=date_str)
+
+    # report가 dict면 report['report'], 아니면 report 그대로
+    report_text = report['report'] if isinstance(report, dict) and 'report' in report else report
+
+    # None이 아니면 마크다운 변환
+    if report_text:
+        html_report = markdown.markdown(report_text)
+    else:
+        html_report = None
+
+    return render_template(
+        'report_detail.html',
+        report=html_report,
+        report_type=report_type,
+        date_str=date_str
+    )
 
 if __name__ == '__main__':
     # NLTK 데이터 다운로드
