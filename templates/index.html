@@ -35,6 +35,24 @@
         .news-card.hidden {
             display: none;
         }
+        /* 모바일 메뉴 스타일 */
+        .mobile-menu {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-menu {
+                display: block;
+            }
+            .desktop-menu {
+                display: none;
+            }
+            .mobile-menu-items {
+                display: none;
+            }
+            .mobile-menu-items.active {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -42,37 +60,54 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <a href="/" class="block">
-                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
-                    <p class="mt-2">Environmental News</p>
+                    <h1 class="text-2xl md:text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                    <p class="mt-1 md:mt-2 text-sm md:text-base">Environmental News</p>
                 </a>
-                <nav class="flex space-x-6">
-                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                <!-- 모바일 메뉴 버튼 -->
+                <button class="mobile-menu md:hidden text-white" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <!-- 데스크톱 메뉴 -->
+                <nav class="desktop-menu hidden md:flex space-x-4 md:space-x-6">
+                    <a href="/" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
                         <i class="fas fa-newspaper mr-2"></i>
                         News
                     </a>
-                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <a href="/trends" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
                         <i class="fas fa-chart-line mr-2"></i>
                         Trends
                     </a>
-                    <a href="/reports" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <a href="/reports" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
                         <i class="fas fa-file-alt mr-2"></i>
                         Reports
                     </a>
                 </nav>
             </div>
+            <!-- 모바일 메뉴 아이템 -->
+            <div class="mobile-menu-items hidden md:hidden mt-4 pb-2">
+                <a href="/" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
+                    <i class="fas fa-newspaper mr-2"></i>News
+                </a>
+                <a href="/trends" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
+                    <i class="fas fa-chart-line mr-2"></i>Trends
+                </a>
+                <a href="/reports" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
+                    <i class="fas fa-file-alt mr-2"></i>Reports
+                </a>
+            </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-4 md:py-8">
         <!-- 필터링 섹션 -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 md:mb-8">
             <form method="GET" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- 카테고리 선택 -->
                     <div>
                         <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                         <select name="category" id="category" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
                             <option value="">All Categories</option>
                             {% for category_id, category in categories.items() %}
                             <option value="{{ category_id }}" {% if category_id == current_category %}selected{% endif %}>
@@ -86,7 +121,7 @@
                     <div>
                         <label for="source" class="block text-sm font-medium text-gray-700 mb-1">News Source</label>
                         <select name="source" id="source" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
                             <option value="">All Sources</option>
                             {% for source in sources %}
                             <option value="{{ source }}" {% if source == current_source %}selected{% endif %}>
@@ -100,7 +135,7 @@
                     <div>
                         <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
                         <select name="sort" id="sort" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
                             <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
                             <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
                         </select>
@@ -110,7 +145,7 @@
                 <!-- 필터 적용 버튼 -->
                 <div class="flex justify-end">
                     <button type="submit" 
-                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            class="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
                         Apply Filters
                     </button>
                 </div>
@@ -119,39 +154,39 @@
 
         <!-- 카테고리별 뉴스 섹션 -->
         {% for category_id, category in categories.items() %}
-        <section id="{{ category_id }}" class="category-section mb-12">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 cursor-pointer hover:text-green-600 transition-colors"
+        <section id="{{ category_id }}" class="category-section mb-8 md:mb-12">
+            <div class="flex items-center justify-between mb-4 md:mb-6">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 cursor-pointer hover:text-green-600 transition-colors"
                     onclick="toggleCategory('{{ category_id }}')">
                     {{ category.name }}
                 </h2>
                 <button onclick="toggleCategory('{{ category_id }}')" 
-                        class="text-gray-600 hover:text-green-600 transition-colors">
+                        class="text-gray-600 hover:text-green-600 transition-colors p-2">
                     <i class="fas fa-chevron-down expand-icon" id="icon-{{ category_id }}"></i>
                 </button>
             </div>
             {% if categorized_news[category_id] %}
                 <div class="news-grid collapsed" id="grid-{{ category_id }}">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {% for news in categorized_news[category_id] %}
                         <article class="news-card bg-white rounded-lg shadow-md overflow-hidden {% if loop.index > 3 %}hidden{% endif %}"
                                  data-index="{{ loop.index }}">
                             {% if news.image_url %}
-                            <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full h-48 object-cover">
+                            <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full h-40 md:h-48 object-cover">
                             {% endif %}
-                            <div class="p-6">
+                            <div class="p-4 md:p-6">
                                 <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-xl font-semibold">
+                                    <h3 class="text-lg md:text-xl font-semibold">
                                         <a href="{{ news.link }}" target="_blank" class="text-green-600 hover:text-green-800">
                                             {{ news.title }}
                                         </a>
                                     </h3>
-                                    <span class="text-sm text-gray-500">{{ news.source }}</span>
+                                    <span class="text-xs md:text-sm text-gray-500 ml-2">{{ news.source }}</span>
                                 </div>
-                                <p class="text-gray-600 text-sm mb-4">{{ news.published }}</p>
-                                <p class="text-gray-700">{{ news.summary[:200] }}...</p>
+                                <p class="text-xs md:text-sm text-gray-600 mb-3">{{ news.published }}</p>
+                                <p class="text-sm md:text-base text-gray-700">{{ news.summary[:150] }}...</p>
                                 <a href="{{ news.link }}" target="_blank" 
-                                   class="inline-block mt-4 text-green-600 hover:text-green-800 font-semibold">
+                                   class="inline-block mt-3 text-green-600 hover:text-green-800 font-semibold text-sm md:text-base">
                                     Read More →
                                 </a>
                             </div>
@@ -160,7 +195,7 @@
                     </div>
                 </div>
             {% else %}
-                <div class="text-center py-8 bg-white rounded-lg shadow-md">
+                <div class="text-center py-6 md:py-8 bg-white rounded-lg shadow-md">
                     <p class="text-gray-600">No news in this category.</p>
                 </div>
             {% endif %}
@@ -168,13 +203,18 @@
         {% endfor %}
     </main>
 
-    <footer class="bg-gray-800 text-white py-6">
+    <footer class="bg-gray-800 text-white py-4 md:py-6">
         <div class="container mx-auto px-4 text-center">
-            <p>© 2024 Earth Guardian. All rights reserved.</p>
+            <p class="text-sm md:text-base">© 2024 Earth Guardian. All rights reserved.</p>
         </div>
     </footer>
 
     <script>
+        function toggleMobileMenu() {
+            const menuItems = document.querySelector('.mobile-menu-items');
+            menuItems.classList.toggle('active');
+        }
+
         function toggleCategory(categoryId) {
             const grid = document.getElementById(`grid-${categoryId}`);
             const icon = document.getElementById(`icon-${categoryId}`);
