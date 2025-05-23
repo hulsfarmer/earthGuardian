@@ -6,35 +6,56 @@
     <title>Earth Guardian - Reports</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+      @media (max-width: 640px) {
+        h1.text-4xl { font-size: 1.5rem; }
+        .container { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .p-6 { padding: 1rem; }
+        .text-3xl { font-size: 1.25rem; }
+        .text-xl { font-size: 1rem; }
+        .gap-8 { gap: 1rem; }
+      }
+    </style>
 </head>
 <body class="bg-gray-100">
     <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <a href="/" class="block">
-                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
-                    <p class="mt-2">Environmental News</p>
+        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
+            <a href="/" class="block">
+                <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                <p class="mt-2 text-sm sm:text-base">Environmental News</p>
+            </a>
+            <button id="mobile-menu-toggle" class="sm:hidden px-2 py-1 ml-auto text-white focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <nav id="main-nav" class="flex space-x-6 sm:flex hidden w-full sm:w-auto mt-4 sm:mt-0">
+                <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-newspaper mr-2"></i>
+                    News
                 </a>
-                <nav class="flex space-x-6">
-                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-newspaper mr-2"></i>
-                        News
-                    </a>
-                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-chart-line mr-2"></i>
-                        Trends
-                    </a>
-                    <a href="/reports" class="px-4 py-2 rounded-md bg-green-800 font-bold flex items-center">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        Reports
-                    </a>
-                </nav>
-            </div>
+                <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Trends
+                </a>
+                <a href="/reports" class="px-4 py-2 rounded-md bg-green-800 font-bold flex items-center">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Reports
+                </a>
+            </nav>
         </div>
+        <script>
+          const menuBtn = document.getElementById('mobile-menu-toggle');
+          const nav = document.getElementById('main-nav');
+          if(menuBtn) {
+            menuBtn.addEventListener('click', () => {
+              nav.classList.toggle('hidden');
+            });
+          }
+        </script>
     </header>
     <main class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-8">리포트 목록</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- 일일 리포트 -->
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-day mr-2"></i>일일 리포트</h2>
@@ -70,7 +91,7 @@
             </div>
         </div>
     </main>
-    <footer class="bg-gray-800 text-white py-6 mt-12">
+    <footer class="bg-gray-800 text-white py-6 mt-12 text-sm sm:text-base">
         <div class="container mx-auto px-4 text-center">
             <p>© 2024 Earth Guardian. All rights reserved.</p>
         </div>
