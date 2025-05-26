@@ -61,7 +61,7 @@
                 <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-day mr-2"></i> Daily Reports</h2>
                 <ul>
                     {% for key in daily_keys %}
-                    <li class="mb-2"><a href="/reports/day?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2"><a href="/reports/daily?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
                     {% else %}
                     <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
@@ -72,7 +72,7 @@
                 <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-week mr-2"></i>Weekly Reports</h2>
                 <ul>
                     {% for key in weekly_keys %}
-                    <li class="mb-2"><a href="/reports/week?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2"><a href="/reports/weekly?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
                     {% else %}
                     <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
@@ -83,7 +83,7 @@
                 <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center"><i class="fas fa-calendar-alt mr-2"></i>Monthly Reports</h2>
                 <ul>
                     {% for key in monthly_keys %}
-                    <li class="mb-2"><a href="/reports/month?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
+                    <li class="mb-2"><a href="/reports/monthly?date={{ '-'.join(key.split('-')[1:]) }}" class="text-green-600 hover:underline">{{ key }}</a></li>
                     {% else %}
                     <li class="text-gray-400">No reports available.</li>
                     {% endfor %}
