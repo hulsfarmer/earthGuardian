@@ -457,9 +457,9 @@ def trends_page():
 
 @app.route('/reports')
 def reports():
-    daily_keys = list_report_keys('day')
-    weekly_keys = list_report_keys('week')
-    monthly_keys = list_report_keys('month')
+    daily_keys = list_report_keys('daily')
+    weekly_keys = list_report_keys('weekly')
+    monthly_keys = list_report_keys('monthly')
     return render_template('reports.html',
                           daily_keys=daily_keys,
                           weekly_keys=weekly_keys,
