@@ -1,698 +1,164 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earth Guardian - Environmental Trends</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .trend-card {
-            transition: transform 0.2s;
-            margin-bottom: 1rem;
-        }
-        .trend-card:hover {
-            transform: translateY(-5px);
-        }
-        .news-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .news-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(4px);
-        }
-        .news-item:last-child {
-            border-bottom: none;
-        }
-        .news-item h4 {
-            margin-bottom: 8px;
-            color: #1a202c;
-        }
-        .news-item p {
-            color: #4a5568;
-        }
-        .news-item .source {
-            color: #718096;
-            font-size: 0.875rem;
-        }
-        .news-item .date {
-            color: #718096;
-            font-size: 0.875rem;
-        }
-        .section-title {
-            color: #1a202c;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-        .chart-container {
-            height: 250px;
-            margin-bottom: 1rem;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 300px;
-            }
-        }
-        .news-container {
-            position: sticky;
-            top: 2rem;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        @media (min-width: 768px) {
-            .news-container {
-                max-height: 300px;
-            }
-        }
-        .chart-news-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        @media (min-width: 768px) {
-            .chart-news-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        .chart-section {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1rem;
-        }
-        @media (min-width: 768px) {
-            .chart-section {
-                padding: 1.5rem;
-            }
-        }
-        .news-section {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1rem;
-        }
-        @media (min-width: 768px) {
-            .news-section {
-                padding: 1.5rem;
-            }
-        }
-        /* 모바일 메뉴 스타일 */
-        .mobile-menu {
-            display: none;
-        }
-        @media (max-width: 768px) {
-            .mobile-menu {
-                display: block;
-            }
-            .desktop-menu {
-                display: none;
-            }
-            .mobile-menu-items {
-                display: none;
-            }
-            .mobile-menu-items.active {
-                display: block;
-            }
-        }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Earth Guardian – Environmental Trends</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.chart-container{height:300px}
+.chart-news-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.news-container{max-height:300px;overflow-y:auto}
+.news-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
+.news-item:hover{background:#f3f4f6}
+@media (max-width:768px){.chart-news-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body class="bg-gray-100">
-    <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <a href="/" class="block">
-                    <h1 class="text-2xl md:text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
-                    <p class="mt-1 md:mt-2 text-sm md:text-base">Environmental News</p>
-                </a>
-                <!-- 모바일 메뉴 버튼 -->
-                <button class="mobile-menu md:hidden text-white" onclick="toggleMobileMenu()">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-                <!-- 데스크톱 메뉴 -->
-                <nav class="desktop-menu hidden md:flex space-x-4 md:space-x-6">
-                    <a href="/" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-newspaper mr-2"></i>
-                        News
-                    </a>
-                    <a href="/trends" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-chart-line mr-2"></i>
-                        Trends
-                    </a>
-                    <a href="/reports" class="px-3 md:px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        Reports
-                    </a>
-                </nav>
-            </div>
-            <!-- 모바일 메뉴 아이템 -->
-            <div class="mobile-menu-items hidden md:hidden mt-4 pb-2">
-                <a href="/" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
-                    <i class="fas fa-newspaper mr-2"></i>News
-                </a>
-                <a href="/trends" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
-                    <i class="fas fa-chart-line mr-2"></i>Trends
-                </a>
-                <a href="/reports" class="block px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
-                    <i class="fas fa-file-alt mr-2"></i>Reports
-                </a>
-            </div>
-        </div>
-    </header>
+<header class="bg-green-600 text-white sticky top-0 z-50">
+ <div class="container mx-auto p-4 flex justify-between">
+  <a href="/" class="text-3xl font-bold">Earth Guardian</a>
+  <nav class="space-x-6">
+   <a href="/"       class="hover:underline">News</a>
+   <a href="/trends" class="font-semibold">Trends</a>
+   <a href="/reports" class="hover:underline">Reports</a>
+  </nav>
+ </div>
+</header>
 
-    <main class="container mx-auto px-4 py-4 md:py-8">
-        <!-- 기간 선택 -->
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 md:mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800">Trend Analysis</h2>
-                <div class="flex space-x-2 md:space-x-4 w-full md:w-auto">
-                    <button id="weeklyBtn" onclick="loadTrends('weekly')" 
-                            class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base">
-                        Weekly Report
-                    </button>
-                    <button id="monthlyBtn" onclick="loadTrends('monthly')"
-                            class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base">
-                        Monthly Report
-                    </button>
-                </div>
-            </div>
-        </div>
+<main class="container mx-auto p-4">
+ <!-- 기간 선택 -->
+ <div class="bg-white rounded shadow p-4 mb-6 flex justify-between items-center">
+  <h2 class="text-xl font-bold">Trend Analysis</h2>
+  <div>
+   <button id="weeklyBtn"  class="btn-period">Weekly</button>
+   <button id="monthlyBtn" class="btn-period">Monthly</button>
+  </div>
+ </div>
 
-        <!-- 메인 컨텐츠 -->
-        <div class="space-y-6 md:space-y-8">
-            <!-- 키워드 트렌드 -->
-            <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Top Keywords</h3>
-                    <div class="chart-container">
-                        <canvas id="keywordChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="keywordNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Keyword Related News</h3>
-                    <div id="keywordNewsList" class="news-container">
-                        <!-- 키워드 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
-            </div>
+ <!-- 키워드 / 출처 / 카테고리 / 국가 -->
+ <div id="charts"></div>
+</main>
 
-            <!-- 출처 분포 -->
-            <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">News Source Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="sourceChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="sourceNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Source Related News</h3>
-                    <div id="sourceNewsList" class="news-container">
-                        <!-- 출처 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
-            </div>
+<script>
+const $ = sel => document.querySelector(sel);
+const btnCls='px-3 py-1 rounded text-white mx-1';                  // shortcut
 
-            <!-- 카테고리 분포 -->
-            <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Category Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="categoryNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Category Related News</h3>
-                    <div id="categoryNewsList" class="news-container">
-                        <!-- 카테고리 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
-            </div>
+function setPeriodBtn(active){
+ ['weekly','monthly'].forEach(p=>{
+   const el = document.getElementById(p+'Btn');
+   el.className = btnCls + (p===active? ' bg-green-700':' bg-green-500');
+ });
+}
 
-            <!-- 국가 분포 -->
-            <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Country Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="countryChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="countryNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Country Related News</h3>
-                    <div id="countryNewsList" class="news-container">
-                        <!-- 국가 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+async function loadTrends(period='weekly'){
+ setPeriodBtn(period);
+ const res = await fetch(`/api/trends?period=${period}`);
+ const data=await res.json();
+ if(data.error){alert('No data');return}
 
-    <footer class="bg-gray-800 text-white py-4 md:py-6">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-sm md:text-base">© 2024 Earth Guardian. All rights reserved.</p>
-        </div>
-    </footer>
+ // --- 키워드 차트 & 목록 ----------------
+ const chartsDiv=document.getElementById("charts");
+ chartsDiv.innerHTML=`
+   <div class="chart-news-grid">
+     <div class="bg-white p-4 rounded shadow">
+       <h3 class="font-semibold mb-2">Top 20 Keywords</h3>
+       <canvas id="kwChart"></canvas>
+     </div>
+     <div class="bg-white p-4 rounded shadow">
+       <h3 id="kwTitle" class="font-semibold mb-2">Related News</h3>
+       <div id="kwNews" class="news-container"></div>
+     </div>
+   </div>
 
-    <script>
-        function toggleMobileMenu() {
-            const menuItems = document.querySelector('.mobile-menu-items');
-            menuItems.classList.toggle('active');
-        }
+   <div class="chart-news-grid">
+     <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Sources</h3><canvas id="srcChart"></canvas></div>
+     <div class="bg-white p-4 rounded shadow"><h3 id="srcTitle" class="font-semibold mb-2">Source News</h3><div id="srcNews" class="news-container"></div></div>
+   </div>
 
-        let keywordsChart, sourcesChart, categoriesChart, countryChart;
-        let currentPeriod = 'weekly';
-        let newsData = null;  // 뉴스 데이터 저장용
+   <div class="chart-news-grid">
+     <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Categories</h3><canvas id="catChart"></canvas></div>
+     <div class="bg-white p-4 rounded shadow"><h3 id="catTitle" class="font-semibold mb-2">Category News</h3><div id="catNews" class="news-container"></div></div>
+   </div>
 
-        function updateNewsList(title, newsItems, titleId, listId) {
-            // 제목 업데이트
-            const titleElement = document.getElementById(titleId);
-            if (titleElement) {
-                titleElement.textContent = title;
-            }
+   <div class="chart-news-grid">
+     <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Countries</h3><canvas id="ctyChart"></canvas></div>
+     <div class="bg-white p-4 rounded shadow"><h3 id="ctyTitle" class="font-semibold mb-2">Country News</h3><div id="ctyNews" class="news-container"></div></div>
+   </div>
+ `;
 
-            // 뉴스 목록 업데이트
-            const newsListElement = document.getElementById(listId);
-            if (newsListElement) {
-                if (newsItems.length === 0) {
-                    newsListElement.innerHTML = '<p class="text-gray-500">No related news found.</p>';
-                    return;
-                }
+ // helper - 차트 클릭 시 뉴스목록
+ function makeNews(list, boxId){
+   $(boxId).innerHTML = list.length
+     ? list.map(n=>`<div class="news-item" onclick="window.open('${n.link}','_blank')">${n.title}</div>`).join('')
+     : '<p class="text-sm text-gray-500">No news</p>';
+ }
 
-                newsListElement.innerHTML = newsItems.map(news => `
-                    <div class="news-item" onclick="window.open('${news.link || '#'}', '_blank')">
-                        <h4 class="font-semibold text-gray-800 hover:text-green-600 transition-colors text-sm md:text-base">${news.title || 'No Title'}</h4>
-                    </div>
-                `).join('');
-            }
-        }
+ // Keyword Chart
+ const kwCtx=$("#kwChart").getContext('2d');
+ new Chart(kwCtx,{
+   type:'bar',
+   data:{labels:data.top_keywords.map(k=>k.keyword),
+         datasets:[{data:data.top_keywords.map(k=>k.count),backgroundColor:'#4ade80'}]},
+   options:{onClick:(e,els)=>{
+     if(!els.length) return;
+     const kw=data.top_keywords[els[0].index].keyword.toLowerCase();
+     const rel=data.sample_news.filter(n=>(n.title+n.summary).toLowerCase().includes(kw));
+     $("#kwTitle").textContent=`News about "${kw}"`;
+     makeNews(rel,"#kwNews");
+   },plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+ });
 
-        function updateButtonStates(selectedPeriod) {
-            const weeklyBtn = document.getElementById('weeklyBtn');
-            const monthlyBtn = document.getElementById('monthlyBtn');
-            
-            weeklyBtn.className = 'flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base';
-            monthlyBtn.className = 'flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base';
-            
-            if (selectedPeriod === 'weekly') {
-                weeklyBtn.className = 'flex-1 md:flex-none px-4 py-2 bg-green-800 text-white rounded-md hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 shadow-lg text-sm md:text-base';
-            } else {
-                monthlyBtn.className = 'flex-1 md:flex-none px-4 py-2 bg-green-800 text-white rounded-md hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 shadow-lg text-sm md:text-base';
-            }
-        }
+ // Source Chart
+ const srcCtx=$("#srcChart").getContext('2d');
+ new Chart(srcCtx,{
+   type:'pie',
+   data:{labels:data.source_distribution.map(s=>s.source),
+         datasets:[{data:data.source_distribution.map(s=>s.count)}]},
+   options:{onClick:(e,els)=>{
+     if(!els.length) return;
+     const src=data.source_distribution[els[0].index].source;
+     const rel=data.sample_news.filter(n=>n.source===src);
+     $("#srcTitle").textContent=`News from ${src}`;
+     makeNews(rel,"#srcNews");
+   }}
+ });
 
-        function createCharts(data) {
-            // newsData 설정
-            newsData = data;
-            console.log('Creating charts with data:', data);
+ // Category Chart
+ const catCtx=$("#catChart").getContext('2d');
+ new Chart(catCtx,{
+   type:'doughnut',
+   data:{labels:data.category_distribution.map(c=>c.category),
+         datasets:[{data:data.category_distribution.map(c=>c.count)}]},
+   options:{onClick:(e,els)=>{
+     if(!els.length) return;
+     const cat=data.category_distribution[els[0].index].category;
+     const rel=data.sample_news.filter(n=>n.category===cat);
+     $("#catTitle").textContent=`${cat} News`;
+     makeNews(rel,"#catNews");
+   }}
+ });
 
-            // 키워드 차트
-            const keywordCtx = document.getElementById('keywordChart').getContext('2d');
-            if (keywordsChart) keywordsChart.destroy();
-            keywordsChart = new Chart(keywordCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.top_keywords.map(k => k.keyword),
-                    datasets: [{
-                        label: 'Frequency',
-                        data: data.top_keywords.map(k => k.count),
-                        backgroundColor: [
-                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
-                            '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71',
-                            '#E74C3C', '#1ABC9C', '#F1C40F', '#34495E', '#16A085',
-                            '#D35400', '#8E44AD', '#2980B9', '#F39C12', '#27AE60'
-                        ],
-                        borderColor: 'rgba(0, 0, 0, 0.1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Frequency: ${context.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements && elements.length > 0) {
-                            const index = elements[0].index;
-                            const keyword = data.top_keywords[index].keyword;
-                            const relatedNews = data.sample_news.filter(news => {
-                                const titleMatch = news.title && news.title.toLowerCase().includes(keyword.toLowerCase());
-                                const summaryMatch = news.summary && news.summary.toLowerCase().includes(keyword.toLowerCase());
-                                return titleMatch || summaryMatch;
-                            });
-                            updateNewsList(
-                                `News related to "${keyword}"`,
-                                relatedNews,
-                                'keywordNewsTitle',
-                                'keywordNewsList'
-                            );
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            });
+ // Country Chart
+ const ctyCtx=$("#ctyChart").getContext('2d');
+ new Chart(ctyCtx,{
+   type:'bar',
+   data:{labels:data.country_distribution.map(c=>c.country),
+         datasets:[{data:data.country_distribution.map(c=>c.count),backgroundColor:'#60a5fa'}]},
+   options:{onClick:(e,els)=>{
+     if(!els.length) return;
+     const cty=data.country_distribution[els[0].index].country.toLowerCase();
+     const rel=data.sample_news.filter(n=>(n.title+n.summary).toLowerCase().includes(cty));
+     $("#ctyTitle").textContent=`News about ${cty}`;
+     makeNews(rel,"#ctyNews");
+   },plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+ });
 
-            // 출처 차트
-            const sourceCtx = document.getElementById('sourceChart').getContext('2d');
-            if (sourcesChart) sourcesChart.destroy();
-            sourcesChart = new Chart(sourceCtx, {
-                type: 'pie',
-                data: {
-                    labels: data.source_distribution.map(s => s.source),
-                    datasets: [{
-                        data: data.source_distribution.map(s => s.count),
-                        backgroundColor: [
-                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
-                            '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'
-                        ],
-                        borderColor: 'rgba(0, 0, 0, 0.1)',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: {
-                                    size: 14
-                                },
-                                padding: 20,
-                                boxWidth: 20
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.raw / total) * 100).toFixed(1);
-                                    return `${context.label}: ${context.raw} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements && elements.length > 0) {
-                            const index = elements[0].index;
-                            const source = data.source_distribution[index].source;
-                            const relatedNews = data.sample_news.filter(news => news.source === source);
-                            updateNewsList(
-                                `News from ${source}`,
-                                relatedNews,
-                                'sourceNewsTitle',
-                                'sourceNewsList'
-                            );
-                        }
-                    }
-                }
-            });
-
-            // 카테고리 차트
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            if (categoriesChart) categoriesChart.destroy();
-            categoriesChart = new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.category_distribution.map(c => c.category),
-                    datasets: [{
-                        data: data.category_distribution.map(c => c.count),
-                        backgroundColor: [
-                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5',
-                            '#9B59B6', '#3498DB', '#E67E22', '#2ECC71', '#E74C3C', '#1ABC9C'
-                        ],
-                        borderColor: 'rgba(0, 0, 0, 0.1)',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: {
-                                    size: 14
-                                },
-                                padding: 20,
-                                boxWidth: 20
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.raw / total) * 100).toFixed(1);
-                                    return `${context.label}: ${context.raw} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements && elements.length > 0) {
-                            const index = elements[0].index;
-                            const category = data.category_distribution[index].category;
-                            const relatedNews = data.sample_news.filter(news => {
-                                if (!news.category) return false;
-                                const newsCategory = news.category.toLowerCase();
-                                const searchCategory = category.toLowerCase();
-                                return newsCategory === searchCategory;
-                            });
-                            updateNewsList(
-                                `${category} News`,
-                                relatedNews,
-                                'categoryNewsTitle',
-                                'categoryNewsList'
-                            );
-                        }
-                    }
-                }
-            });
-
-            // 국가 차트
-            const countryCtx = document.getElementById('countryChart').getContext('2d');
-            if (countryChart) countryChart.destroy();
-            countryChart = new Chart(countryCtx, {
-                type: 'bar',
-                data: {
-                    labels: data.country_distribution.map(c => c.country),
-                    datasets: [{
-                        label: 'Mentions',
-                        data: data.country_distribution.map(c => c.count),
-                        backgroundColor: [
-                            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
-                            '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'
-                        ],
-                        borderColor: 'rgba(0, 0, 0, 0.1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Mentions: ${context.raw}`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: function(event, elements) {
-                        if (elements && elements.length > 0) {
-                            const index = elements[0].index;
-                            const country = data.country_distribution[index].country;
-                            const relatedNews = data.sample_news.filter(news => {
-                                if (!news.title && !news.summary) return false;
-                                const text = (news.title || '').toLowerCase() + ' ' + (news.summary || '').toLowerCase();
-                                
-                                // 국가별 키워드 매칭
-                                const countryKeywords = {
-                                    'united states': ['united states', 'us', 'usa', 'america', 'american'],
-                                    'china': ['china', 'chinese'],
-                                    'india': ['india', 'indian'],
-                                    'european union': ['eu', 'european union', 'europe'],
-                                    'united kingdom': ['uk', 'united kingdom', 'britain', 'british'],
-                                    'japan': ['japan', 'japanese'],
-                                    'south korea': ['south korea', 'korean', 'korea'],
-                                    'australia': ['australia', 'australian'],
-                                    'brazil': ['brazil', 'brazilian'],
-                                    'russia': ['russia', 'russian'],
-                                    'canada': ['canada', 'canadian'],
-                                    'germany': ['germany', 'german'],
-                                    'france': ['france', 'french'],
-                                    'italy': ['italy', 'italian'],
-                                    'spain': ['spain', 'spanish']
-                                };
-                                
-                                const keywords = countryKeywords[country.toLowerCase()] || [country.toLowerCase()];
-                                return keywords.some(keyword => text.includes(keyword));
-                            });
-
-                            // 중복 제거 (같은 뉴스가 여러 번 표시되는 것을 방지)
-                            const uniqueNews = Array.from(new Set(relatedNews.map(news => news.title))).map(title => 
-                                relatedNews.find(news => news.title === title)
-                            );
-
-                            updateNewsList(
-                                `News about ${country}`,
-                                uniqueNews,
-                                'countryNewsTitle',
-                                'countryNewsList'
-                            );
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 초기 뉴스 목록 설정
-            const topKeyword = data.top_keywords[0];
-            const topSource = data.source_distribution[0];
-            const topCategory = data.category_distribution[0];
-            const topCountry = data.country_distribution[0];
-
-            // 키워드 관련 뉴스
-            const keywordNews = data.sample_news.filter(news => {
-                const titleMatch = news.title && news.title.toLowerCase().includes(topKeyword.keyword.toLowerCase());
-                const summaryMatch = news.summary && news.summary.toLowerCase().includes(topKeyword.keyword.toLowerCase());
-                return titleMatch || summaryMatch;
-            });
-            updateNewsList(
-                `News related to "${topKeyword.keyword}"`,
-                keywordNews,
-                'keywordNewsTitle',
-                'keywordNewsList'
-            );
-
-            // 출처 관련 뉴스
-            const sourceNews = data.sample_news.filter(news => news.source === topSource.source);
-            updateNewsList(
-                `News from ${topSource.source}`,
-                sourceNews,
-                'sourceNewsTitle',
-                'sourceNewsList'
-            );
-
-            // 카테고리 관련 뉴스
-            const categoryNews = data.sample_news.filter(news => {
-                if (!news.category) return false;
-                return news.category.toLowerCase() === topCategory.category.toLowerCase();
-            });
-            updateNewsList(
-                `${topCategory.category} News`,
-                categoryNews,
-                'categoryNewsTitle',
-                'categoryNewsList'
-            );
-
-            // 국가 관련 뉴스 (초기 로드 시)
-            const countryNews = data.sample_news.filter(news => {
-                if (!news.title && !news.summary) return false;
-                const text = (news.title || '').toLowerCase() + ' ' + (news.summary || '').toLowerCase();
-                
-                // 국가별 키워드 매칭
-                const countryKeywords = {
-                    'united states': ['united states', 'us', 'usa', 'america', 'american'],
-                    'china': ['china', 'chinese'],
-                    'india': ['india', 'indian'],
-                    'european union': ['eu', 'european union', 'europe'],
-                    'united kingdom': ['uk', 'united kingdom', 'britain', 'british'],
-                    'japan': ['japan', 'japanese'],
-                    'south korea': ['south korea', 'korean', 'korea'],
-                    'australia': ['australia', 'australian'],
-                    'brazil': ['brazil', 'brazilian'],
-                    'russia': ['russia', 'russian'],
-                    'canada': ['canada', 'canadian'],
-                    'germany': ['germany', 'german'],
-                    'france': ['france', 'french'],
-                    'italy': ['italy', 'italian'],
-                    'spain': ['spain', 'spanish']
-                };
-                
-                const keywords = countryKeywords[topCountry.country.toLowerCase()] || [topCountry.country.toLowerCase()];
-                return keywords.some(keyword => text.includes(keyword));
-            });
-
-            // 중복 제거 (같은 뉴스가 여러 번 표시되는 것을 방지)
-            const uniqueCountryNews = Array.from(new Set(countryNews.map(news => news.title))).map(title => 
-                countryNews.find(news => news.title === title)
-            );
-
-            updateNewsList(
-                `News about ${topCountry.country}`,
-                uniqueCountryNews,
-                'countryNewsTitle',
-                'countryNewsList'
-            );
-        }
-
-        async function loadTrends(period) {
-            try {
-                currentPeriod = period;
-                updateButtonStates(period);
-                
-                const response = await fetch(`/api/trends?period=${period}`);
-                const data = await response.json();
-                if (data.error) {
-                    console.error('Error loading trends:', data.error);
-                    return;
-                }
-                
-                // API 응답 데이터 구조 상세 확인
-                console.log('=== API Response Data ===');
-                console.log('Top Keywords:', data.top_keywords);
-                console.log('Source Distribution:', data.source_distribution);
-                console.log('Category Distribution:', data.category_distribution);
-                console.log('Country Distribution:', data.country_distribution);
-                console.log('Sample News:', data.sample_news);
-                
-                createCharts(data);
-            } catch (error) {
-                console.error('Error loading trends:', error);
-            }
-        }
-
-        // 초기 로드
-        document.addEventListener('DOMContentLoaded', () => {
-            loadTrends('weekly');
-            updateButtonStates('weekly');
-        });
-    </script>
-</body>
-</html> 
+ // 최초 뉴스박스
+ makeNews(data.sample_news.slice(0,10),"#kwNews");
+}
+document.getElementById("weeklyBtn").onclick=_=>loadTrends('weekly');
+document.getElementById("monthlyBtn").onclick=_=>loadTrends('monthly');
+loadTrends('weekly');
+</script>
+</body></html>
