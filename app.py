@@ -235,5 +235,9 @@ def get_trends():
         logger.error(f"Error generating trends report: {str(e)}")
         return jsonify({'error': 'Failed to generate report'}), 500
 
+@app.route('/trends')
+def trends_page():
+    return render_template('trends.html')
+
 if __name__ == '__main__':
     app.run(debug=True) 
