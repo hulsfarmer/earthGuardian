@@ -396,7 +396,7 @@ def analyze_trends(news_items, period='weekly'):
             'sample_news': []
         }
 
-@celery.task
+# @celery.task
 def collect_and_analyze_news():
     """뉴스 수집 및 분석을 비동기로 수행"""
     try:
