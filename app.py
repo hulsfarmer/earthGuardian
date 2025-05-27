@@ -1,36 +1,17 @@
 from flask import Flask, render_template, request, jsonify
-import feedparser
+import json
 from datetime import datetime, timedelta
 import logging
-import requests
-from bs4 import BeautifulSoup
-import time
 from dateutil import parser
-from flask_caching import Cache
+import os
 from collections import Counter
-import json
-import re
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import nltk
-from celery import Celery
-from apscheduler.schedulers.background import BackgroundScheduler
-import os
-from report import list_report_keys, get_report
-import markdown
+import redis
+import re
 
 app = Flask(__name__)
-
-# Redis 캐시 설정
-cache = Cache(app, config={
-    'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
-    'CACHE_DEFAULT_TIMEOUT': 300  # 5분
-})
-
-# Celery 설정
-celery = Celery('tasks', broker=os.environ.get('REDIS_URL'))
-celery.conf.broker_pool_limit = 2  # 연결 풀 제한 (기본값 10)
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -72,31 +53,21 @@ CATEGORIES = {
     }
 }
 
-# 뉴스 피드 설정
-NEWS_FEEDS = {
-    'BBC Environment': 'https://www.bbc.co.uk/news/science_and_environment/rss.xml',
-    'The Guardian Environment': 'https://www.theguardian.com/uk/environment/rss',
-    'Climate Home News': 'https://www.climatechangenews.com/feed/',
-    'Reuters Environment': 'https://www.reutersagency.com/feed/?best-topics=environment&post_type=best',
-    'EcoWatch': 'https://www.ecowatch.com/rss'
-}
+# Redis 연결 설정 (환경변수 또는 기본값 사용)
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
-# NLTK 데이터 다운로드
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-
-def clean_html(html_content):
-    """HTML 컨텐츠에서 텍스트만 추출"""
-    if not html_content:
-        return ""
-    soup = BeautifulSoup(html_content, 'html.parser')
-    return soup.get_text()
+def load_news_data():
+    """JSON 파일에서 뉴스 데이터 로드"""
+    try:
+        with open('data/news.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.warning("News data file not found")
+        return {'news': []}
+    except json.JSONDecodeError:
+        logger.error("Error decoding news data file")
+        return {'news': []}
 
 def categorize_news(news_item):
     """뉴스 항목을 카테고리로 분류"""
@@ -113,137 +84,35 @@ def categorize_news(news_item):
     
     return 'others'
 
-@cache.memoize(timeout=300)  # 5분 동안 캐시
-def get_news():
-    all_news = []
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    # 캐시된 뉴스 가져오기
-    cached_news = cache.get('news_data') or []
-    latest_published = None
-    if cached_news:
-        try:
-            latest_published = max(parser.parse(item['published']) for item in cached_news)
-        except:
-            pass
-
-    for source, feed_url in NEWS_FEEDS.items():
-        try:
-            logger.info(f"Fetching news from {source}")
-            response = requests.get(feed_url, headers=headers, timeout=10)
-            response.raise_for_status()
-            
-            feed = feedparser.parse(response.content)
-            
-            if not feed.entries:
-                logger.warning(f"No entries found in feed from {source}")
-                continue
-                
-            for entry in feed.entries:
+def fetch_news_from_redis():
+    """Redis에서 news-YYYYMMDD-XXX 패턴의 키로 저장된 뉴스들을 모두 가져와 리스트로 반환"""
+    news_pattern = re.compile(r'news-(\d{8})-(\d{3})')
+    news_list = []
+    for key in redis_client.scan_iter('news-*'):
+        if news_pattern.match(key):
+            value = redis_client.get(key)
+            if value:
                 try:
-                    # 이미지 URL 추출
-                    image_url = None
-                    if 'media_content' in entry:
-                        for media in entry.media_content:
-                            if 'url' in media:
-                                image_url = media['url']
-                                break
-                    elif 'links' in entry:
-                        for link in entry.links:
-                            if link.get('type', '').startswith('image/'):
-                                image_url = link['href']
-                                break
-
-                    # 날짜 파싱
-                    published = entry.get('published', '')
-                    try:
-                        published_date = parser.parse(published)
-                        # 캐시된 최신 뉴스보다 이전의 뉴스는 건너뛰기
-                        if latest_published and published_date <= latest_published:
-                            continue
-                        published = published_date.strftime('%Y-%m-%d %H:%M')
-                    except:
-                        try:
-                            published_date = datetime.strptime(published, '%Y-%m-%d %H:%M:%S')
-                            if latest_published and published_date <= latest_published:
-                                continue
-                            published = published_date.strftime('%Y-%m-%d %H:%M')
-                        except:
-                            published = datetime.now().strftime('%Y-%m-%d %H:%M')
-
-                    # HTML 태그 제거
-                    summary = clean_html(entry.get('summary', ''))
-                    if not summary and 'description' in entry:
-                        summary = clean_html(entry.description)
-
-                    news_item = {
-                        'title': entry.title,
-                        'link': entry.link,
-                        'summary': summary,
-                        'published': published,
-                        'source': source,
-                        'image_url': image_url
-                    }
-                    all_news.append(news_item)
-                    logger.info(f"Added news: {news_item['title']}")
-                    
+                    news_item = json.loads(value)
+                    news_item['redis_key'] = key
+                    news_list.append(news_item)
                 except Exception as e:
-                    logger.error(f"Error processing entry from {source}: {str(e)}")
-                    continue
-                    
-            # 피드 간 딜레이 추가
-            time.sleep(1)
-                
-        except Exception as e:
-            logger.error(f"Error fetching feed from {source}: {str(e)}")
-            continue
-    
-    # 새로운 뉴스와 캐시된 뉴스 합치기
-    if cached_news:
-        all_news.extend(cached_news)
-    
-    # 날짜순으로 정렬
-    all_news.sort(key=lambda x: parser.parse(x['published']), reverse=True)
-
-    # 오래된 뉴스(7일 이전) 필터링
-    cutoff_date = datetime.now() - timedelta(days=7)
-    all_news = [item for item in all_news if parser.parse(item['published']) > cutoff_date]
-
-    # 최대 개수 제한
-    MAX_NEWS_COUNT = 300
-    all_news = all_news[:MAX_NEWS_COUNT]
-    
-    # 캐시 업데이트
-    cache.set('news_data', all_news)
-            
-    return all_news
+                    logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
+    # published 기준 내림차순 정렬 (날짜 파싱 실패시 최근순)
+    def parse_date(item):
+        try:
+            return parser.parse(item.get('published', ''))
+        except:
+            return datetime.min
+    news_list.sort(key=parse_date, reverse=True)
+    return news_list
 
 @app.route('/')
 def index():
-    # 필터링 파라미터 가져오기
-    category_filter = request.args.get('category', '')
-    source_filter = request.args.get('source', '')
-    sort_order = request.args.get('sort', 'newest')
+    # Redis에서 뉴스 데이터 로드
+    news_items = fetch_news_from_redis()
 
-    # 캐시된 뉴스 가져오기
-    news_items = get_news()
-
-    # 필터링 적용
-    if category_filter:
-        news_items = [item for item in news_items if categorize_news(item) == category_filter]
-    
-    if source_filter:
-        news_items = [item for item in news_items if item['source'] == source_filter]
-
-    # 정렬
-    if sort_order == 'newest':
-        news_items.sort(key=lambda x: parser.parse(x['published']), reverse=True)
-    else:
-        news_items.sort(key=lambda x: parser.parse(x['published']))
-
-    # 카테고리별로 뉴스 분류
+    # 카테고리 분류 (기존 로직 재사용)
     categorized_news = {category_id: [] for category_id in CATEGORIES.keys()}
     for news in news_items:
         category = categorize_news(news)
@@ -252,22 +121,23 @@ def index():
     return render_template('index.html',
                          categorized_news=categorized_news,
                          categories=CATEGORIES,
-                         sources=NEWS_FEEDS.keys(),
-                         current_category=category_filter,
-                         current_source=source_filter,
-                         current_sort=sort_order)
+                         sources=set(item['source'] for item in news_items),
+                         current_category='',
+                         current_source='',
+                         current_sort='newest')
 
-# 캐시 초기화 엔드포인트 (필요시 수동으로 호출)
-@app.route('/clear-cache')
-def clear_cache():
-    cache.clear()
-    return 'Cache cleared'
-
-def analyze_trends(news_items, period='weekly'):
-    """뉴스 데이터를 분석하여 트렌드를 추출"""
-    logger.info(f"Starting trend analysis for period: {period}")
+@app.route('/api/trends')
+def get_trends():
+    """트렌드 리포트 API 엔드포인트"""
+    period = request.args.get('period', 'weekly')
+    if period not in ['weekly', 'monthly']:
+        return jsonify({'error': 'Invalid period'}), 400
     
     try:
+        # JSON 파일에서 뉴스 데이터 로드
+        news_data = load_news_data()
+        news_items = news_data.get('news', [])
+        
         # 기간 설정
         now = datetime.now()
         if period == 'weekly':
@@ -275,28 +145,14 @@ def analyze_trends(news_items, period='weekly'):
         else:  # monthly
             start_date = now - timedelta(days=30)
         
-        logger.info(f"Filtering news from {start_date} to {now}")
-        
         # 기간 내 뉴스 필터링
-        recent_news = []
-        for item in news_items:
-            try:
-                published_date = parser.parse(item['published'])
-                if published_date >= start_date:
-                    recent_news.append(item)
-            except Exception as e:
-                logger.warning(f"Error parsing date for news item: {str(e)}")
-                continue
-        
-        logger.info(f"Found {len(recent_news)} news items in the period")
-
-        # 최근 뉴스 개수 제한
-        if len(recent_news) > 300:
-            recent_news = recent_news[:300]
+        recent_news = [
+            item for item in news_items
+            if parser.parse(item['published']) >= start_date
+        ]
         
         if not recent_news:
-            logger.warning("No news items found in the specified period")
-            return {
+            return jsonify({
                 'period': period,
                 'generated_at': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'total_news': 0,
@@ -305,7 +161,7 @@ def analyze_trends(news_items, period='weekly'):
                 'category_distribution': [],
                 'country_distribution': [],
                 'sample_news': []
-            }
+            })
         
         # 키워드 추출 및 분석
         all_text = ' '.join([item['title'] + ' ' + item['summary'] for item in recent_news])
@@ -315,16 +171,13 @@ def analyze_trends(news_items, period='weekly'):
         
         # 키워드 빈도 분석
         keyword_freq = Counter(words).most_common(20)
-        logger.info(f"Top keywords: {keyword_freq}")
         
         # 출처별 뉴스 수
         source_stats = Counter(item['source'] for item in recent_news)
-        logger.info(f"Source distribution: {source_stats}")
         
         # 카테고리별 뉴스 수
         category_stats = Counter(categorize_news(item) for item in recent_news)
-        logger.info(f"Category distribution: {category_stats}")
-
+        
         # 국가 분석
         country_keywords = {
             'united states': ['united states', 'us', 'usa', 'america', 'american'],
@@ -343,19 +196,17 @@ def analyze_trends(news_items, period='weekly'):
             'italy': ['italy', 'italian'],
             'spain': ['spain', 'spanish']
         }
-
+        
         # 국가별 뉴스 개수 집계
         country_mentions = Counter()
         for item in recent_news:
             text = (item['title'] + ' ' + item['summary']).lower()
             for country, keywords in country_keywords.items():
-                # 정확한 국가명 매칭
                 if any(keyword in text for keyword in keywords):
                     country_mentions[country] += 1
-
+        
         # 상위 10개 국가만 선택
         country_stats = country_mentions.most_common(10)
-        logger.info(f"Country distribution: {country_stats}")
         
         # 트렌드 리포트 생성
         report = {
@@ -379,122 +230,11 @@ def analyze_trends(news_items, period='weekly'):
             ]
         }
         
-        logger.info("Trend analysis completed successfully")
-        return report
-        
-    except Exception as e:
-        logger.error(f"Error in trend analysis: {str(e)}")
-        return {
-            'period': period,
-            'generated_at': now.strftime('%Y-%m-%d %H:%M:%S'),
-            'error': str(e),
-            'total_news': 0,
-            'top_keywords': [],
-            'source_distribution': [],
-            'category_distribution': [],
-            'country_distribution': [],
-            'sample_news': []
-        }
-
-@celery.task
-def collect_and_analyze_news():
-    """뉴스 수집 및 분석을 비동기로 수행"""
-    try:
-        logger.info("Starting news collection and analysis")
-        news_items = get_news()
-        
-        # 주간/월간 트렌드 분석
-        weekly_trends = analyze_trends(news_items, 'weekly')
-        monthly_trends = analyze_trends(news_items, 'monthly')
-        
-        # 캐시 업데이트
-        cache.set('weekly_trends', weekly_trends)
-        cache.set('monthly_trends', monthly_trends)
-        
-        logger.info("News collection and analysis completed")
-    except Exception as e:
-        logger.error(f"Error in collect_and_analyze_news: {str(e)}")
-
-# 스케줄러 설정
-scheduler = BackgroundScheduler()
-scheduler.add_job(collect_and_analyze_news, 'interval', minutes=5)
-scheduler.start()
-
-@app.route('/api/trends')
-@cache.cached(timeout=300, query_string=True)  # 5분 캐싱, 쿼리 파라미터 고려
-def get_trends():
-    """트렌드 리포트 API 엔드포인트"""
-    period = request.args.get('period', 'weekly')
-    if period not in ['weekly', 'monthly']:
-        return jsonify({'error': 'Invalid period'}), 400
-    
-    try:
-        # 캐시된 트렌드 데이터 확인
-        cached_trends = cache.get(f'{period}_trends')
-        if cached_trends:
-            logger.info(f"Returning cached {period} trends")
-            return jsonify(cached_trends)
-        
-        # 캐시가 없는 경우 새로운 분석 수행
-        logger.info(f"Fetching news for {period} trends analysis")
-        news_items = get_news()
-        report = analyze_trends(news_items, period)
-        
-        if 'error' in report:
-            return jsonify(report), 500
-            
-        # 결과 캐싱
-        cache.set(f'{period}_trends', report)
         return jsonify(report)
+        
     except Exception as e:
         logger.error(f"Error generating trends report: {str(e)}")
         return jsonify({'error': 'Failed to generate report'}), 500
 
-@app.route('/trends')
-def trends_page():
-    """트렌드 리포트 페이지"""
-    return render_template('trends.html')
-
-@app.route('/reports')
-def reports():
-    daily_keys = list_report_keys('daily')
-    weekly_keys = list_report_keys('weekly')
-    monthly_keys = list_report_keys('monthly')
-    return render_template('reports.html',
-                          daily_keys=daily_keys,
-                          weekly_keys=weekly_keys,
-                          monthly_keys=monthly_keys)
-
-@app.route('/reports/<report_type>')
-def report_detail(report_type):
-    date_str = request.args.get('date')
-    report = get_report(report_type, date_str)
-
-    # report가 dict면 report['report'], 아니면 report 그대로
-    report_text = report['report'] if isinstance(report, dict) and 'report' in report else report
-
-    # None이 아니면 마크다운 변환
-    if report_text:
-        html_report = markdown.markdown(report_text)
-    else:
-        html_report = None
-
-    return render_template(
-        'report_detail.html',
-        report=html_report,
-        report_type=report_type,
-        date_str=date_str
-    )
-
 if __name__ == '__main__':
-    # NLTK 데이터 다운로드
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt')
-    try:
-        nltk.data.find('corpora/stopwords')
-    except LookupError:
-        nltk.download('stopwords')
-    
-    app.run(debug=True, port=5050) 
+    app.run(debug=True) 
