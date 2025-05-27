@@ -13,7 +13,7 @@ import re
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import nltk
-from celery import Celery
+# from celery import Celery
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from report import list_report_keys, get_report
@@ -29,8 +29,8 @@ cache = Cache(app, config={
 })
 
 # Celery 설정
-celery = Celery('tasks', broker=os.environ.get('REDIS_URL'))
-celery.conf.broker_pool_limit = 2  # 연결 풀 제한 (기본값 10)
+# celery = Celery('tasks', broker=os.environ.get('REDIS_URL'))
+# celery.conf.broker_pool_limit = 2  # 연결 풀 제한 (기본값 10)
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
