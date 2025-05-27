@@ -134,9 +134,8 @@ def get_trends():
         return jsonify({'error': 'Invalid period'}), 400
     
     try:
-        # JSON 파일에서 뉴스 데이터 로드
-        news_data = load_news_data()
-        news_items = news_data.get('news', [])
+        # Redis에서 뉴스 데이터 로드
+        news_items = fetch_news_from_redis()
         
         # 기간 설정
         now = datetime.now()
