@@ -43,7 +43,3 @@ __pycache__/
 
 # Redis
 dump.rdb
-
-# Celery
-celerybeat-schedule
-celerybeat.pid 
