@@ -85,20 +85,25 @@ def categorize_news(news_item):
     return 'others'
 
 def fetch_news_from_redis():
-    """Redis에서 news-YYYYMMDD-XXX 패턴의 키로 저장된 뉴스만 가져옴 (정확히 news-로 시작하는 것만)"""
     news_pattern = re.compile(r'^news-(\d{8})-(\d{3})$')
+    keys = [key for key in redis_client.scan_iter('news-*') if news_pattern.match(key)]
+    
+    # Pipeline으로 여러 GET 요청을 한 번에 처리
+    pipe = redis_client.pipeline()
+    for key in keys:
+        pipe.get(key)
+    values = pipe.execute()
+    
     news_list = []
-    for key in redis_client.scan_iter('news-*'):
-        if news_pattern.match(key):
-            value = redis_client.get(key)
-            if value:
-                try:
-                    news_item = json.loads(value)
-                    news_item['redis_key'] = key
-                    news_list.append(news_item)
-                except Exception as e:
-                    logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
-    # published 기준 내림차순 정렬 (날짜 파싱 실패시 최근순)
+    for key, value in zip(keys, values):
+        if value:
+            try:
+                news_item = json.loads(value)
+                news_item['redis_key'] = key
+                news_list.append(news_item)
+            except Exception as e:
+                logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
+    
     def parse_date(item):
         try:
             return parser.parse(item.get('published', ''))
