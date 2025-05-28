@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: myapp
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+
+# Celery 워커를 없애려면 여기 worker 블록을 쓰지 않는다
