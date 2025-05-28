@@ -13,7 +13,6 @@ import re
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import nltk
-# from celery import Celery
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 from report import list_report_keys, get_report
