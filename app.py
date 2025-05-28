@@ -90,7 +90,7 @@ def get_news():
         time.sleep(0.5)
 
     # 최신순 정렬 & 7일 이내만 유지
-    cutoff = datetime.utcnow() - timedelta(days=7)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     all_news = sorted([n for n in all_news if parser.parse(n["published"])>cutoff],
                       key=lambda x: x["published"], reverse=True)[:300]
     return all_news
