@@ -27,10 +27,6 @@ cache = Cache(app, config={
     'CACHE_DEFAULT_TIMEOUT': 300  # 5분
 })
 
-# Celery 설정
-# celery = Celery('tasks', broker=os.environ.get('REDIS_URL'))
-# celery.conf.broker_pool_limit = 2  # 연결 풀 제한 (기본값 10)
-
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
