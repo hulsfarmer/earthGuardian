@@ -30,6 +30,7 @@ except Exception as e:
     except Exception as download_e:
         logger.error(f"Failed to download NLTK resources: {download_e}. Please ensure NLTK is installed and has access to download directories.")
 
+
 # 카테고리 키워드 정의
 CATEGORIES = {
     'climate_change': {
@@ -89,29 +90,36 @@ except Exception as e:
     stop_words = set()
 
 def categorize_news(news_item):
-    """뉴스 항목을 카테고리로 분류 (Redis에 category 정보가 없는 경우에만 사용)"""
+    """
+    뉴스 항목을 키워드 기반으로 카테고리 분류.
+    주어진 news_item에 category 필드가 없거나 비어 있을 때만 사용됩니다.
+    """
     title_lower = news_item.get('title', '').lower()
     summary_lower = news_item.get('summary', '').lower()
     
     combined_text = title_lower + " " + summary_lower
     
-    assigned_category = CATEGORIES['others']['name'] 
+    assigned_category_name = CATEGORIES['others']['name'] # 기본값은 'Others'
     
     for category_id, category_info in CATEGORIES.items():
         if category_id == 'others':
-            continue
+            continue # 'others' 카테고리 자체는 키워드 기반 분류에서 제외
             
         for keyword in category_info['keywords']:
             if keyword in combined_text:
-                assigned_category = category_info['name']
-                logger.debug(f"categorize_news: '{news_item.get('title', '')[:40]}...' classified as '{assigned_category}' (keyword: '{keyword}')")
-                return assigned_category
+                assigned_category_name = category_info['name']
+                logger.debug(f"categorize_news: '{news_item.get('title', '')[:40]}...' classified as '{assigned_category_name}' (keyword: '{keyword}')")
+                return assigned_category_name # 일치하는 키워드 찾으면 즉시 반환
     
     logger.debug(f"categorize_news: '{news_item.get('title', '')[:40]}...' classified as 'Others' (no specific keywords found).")
-    return assigned_category
+    return assigned_category_name
 
 def fetch_news_from_redis():
-    """Redis에서 모든 뉴스 항목을 가져와 정렬하고, Redis의 category 정보가 있으면 우선 사용"""
+    """
+    Redis에서 모든 뉴스 항목을 가져와 정렬하고,
+    Redis 데이터에 'category' 필드가 있으면 그것을 우선 사용합니다.
+    없거나 유효하지 않으면 categorize_news 함수를 통해 분류합니다.
+    """
     if redis_client is None:
         logger.error("fetch_news_from_redis: Redis client is not connected. Returning empty list.")
         return []
@@ -148,13 +156,28 @@ def fetch_news_from_redis():
                 news_data = news_item.get('value', {}) # 'value' 키 아래에 실제 데이터가 있다고 가정
                 news_data['redis_key'] = key
                 
-                # Redis에 'category' 필드가 없거나, 빈 값이거나, 'Others'가 아닌 정의된 카테고리에 속하지 않으면 새로 분류
-                # 'Others'는 Redis에서 이미 분류된 경우도 유효하다고 판단
-                if 'category' not in news_data or not news_data['category'] or news_data['category'] not in [c['name'] for c in CATEGORIES.values() if c['name'] != 'Others']:
+                # --- 핵심 변경 사항: Redis의 category 필드 우선 사용 ---
+                redis_category = news_data.get('category')
+                
+                # Redis에서 가져온 category 값이 유효한지 확인
+                # (CATEGORIES 딕셔너리의 name 값 중에 있는지 확인)
+                valid_redis_category = False
+                if redis_category:
+                    for cat_info in CATEGORIES.values():
+                        if redis_category == cat_info['name']:
+                            valid_redis_category = True
+                            break
+                
+                if valid_redis_category:
+                    news_data['category'] = redis_category
+                    logger.debug(f"fetch_news_from_redis: Using Redis category '{redis_category}' for '{news_data.get('title', 'N/A')[:40]}...'.")
+                else:
+                    # Redis에 category가 없거나 유효하지 않으면 새로 분류
                     news_data['category'] = categorize_news(news_data) 
+                    logger.debug(f"fetch_news_from_redis: Redis category for '{news_data.get('title', 'N/A')[:40]}...' was invalid/missing. Classified as '{news_data['category']}'.")
+                # --------------------------------------------------------
                 
                 news_list.append(news_data)
-                logger.debug(f"fetch_news_from_redis: Parsed news item {i+1}/{len(keys)}: Title='{news_data.get('title', 'N/A')[:40]}...', Source='{news_data.get('source', 'N/A')}', Category='{news_data.get('category', 'N/A')}'")
             except json.JSONDecodeError as e:
                 logger.error(f"fetch_news_from_redis: JSON Decode Error for key {key}: {e} - Value (first 100 chars): {value[:100]}...")
             except Exception as e:
@@ -170,7 +193,7 @@ def fetch_news_from_redis():
     def parse_date_for_sort(item):
         date_str = item.get('published', '')
         if not date_str:
-            logger.warning(f"parse_date_for_sort: 'published' field is empty for news item: {item.get('title', 'N/A')[:50]}")
+            # logger.warning(f"parse_date_for_sort: 'published' field is empty for news item: {item.get('title', 'N/A')[:50]}")
             return datetime.min.replace(tzinfo=timezone.utc)
         try:
             dt = parser.parse(date_str)
@@ -187,7 +210,7 @@ def fetch_news_from_redis():
     for item in news_list:
         parsed_dt = parse_date_for_sort(item)
         if parsed_dt == datetime.min.replace(tzinfo=timezone.utc):
-            logger.warning(f"News item '{item.get('title', 'N/A')[:50]}...' has unparseable date.")
+            logger.warning(f"News item '{item.get('title', 'N/A')[:50]}...' has unparseable date, will be sorted to the very beginning/end.")
         item['_parsed_published_date'] = parsed_dt # 정렬 및 필터링을 위해 파싱된 날짜 저장
 
     news_list.sort(key=lambda x: x['_parsed_published_date'], reverse=True)
@@ -208,7 +231,8 @@ def index():
         categorized_news = {category_id: [] for category_id in CATEGORIES.keys()}
         
         for news in news_items:
-            # news_data['category'] 필드에 카테고리 이름 (예: 'Climate Change')이 이미 있다고 가정
+            # news_data['category'] 필드에 카테고리 이름 (예: 'Climate Change')이 있다고 가정
+            # fetch_news_from_redis에서 이미 category 필드가 설정되어 있으므로, 여기서는 사용하기만 하면 됩니다.
             news_category_name = news.get('category', CATEGORIES['others']['name']) 
             
             # CATEGORIES 딕셔너리의 name 값과 일치하는 category_id를 찾아서 분류
@@ -221,8 +245,8 @@ def index():
             if matched_category_id:
                 categorized_news[matched_category_id].append(news)
             else:
-                # 정의되지 않은 카테고리 이름이 들어왔다면 'others'로 분류
-                logger.warning(f"index route: News item '{news.get('title', 'N/A')[:50]}' has unknown category name '{news_category_name}', assigning to 'Others'.")
+                # 정의되지 않은 카테고리 이름이 들어왔다면 'others'로 분류 (이 경우는 거의 없을 것)
+                logger.warning(f"index route: News item '{news.get('title', 'N/A')[:50]}' has an unexpected category name '{news_category_name}' from Redis. Assigning to 'Others'.")
                 categorized_news['others'].append(news) 
         
     for cat_id, news_list_in_cat in categorized_news.items():
@@ -293,7 +317,7 @@ def get_trends():
                 'sample_news': []
             })
                 
-        # --- 실제 트렌드 데이터 계산 로직 ---
+        # --- 실제 트렌드 데이터 계산 로직 (하드코딩 제거) ---
         
         # 1. 키워드 빈도 계산
         all_words = []
@@ -312,7 +336,6 @@ def get_trends():
                 logger.error(f"get_trends: Error tokenizing/filtering words for news item '{news.get('title', 'N/A')[:50]}...': {e}")
                 continue
         
-        # 일반적인 제외 키워드 추가 (NLTK stopwords에 없는 일반 단어들)
         common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental']) 
         filtered_keywords = [word for word in all_words if word not in common_exclude_keywords]
 
@@ -330,12 +353,13 @@ def get_trends():
         category_counts_dict = {CATEGORIES[c_id]['name']: 0 for c_id in CATEGORIES} 
         
         for news in recent_news:
-            cat_name = news.get('category', CATEGORIES['others']['name']) # 뉴스에 카테고리 없으면 'Others'로 간주
+            # fetch_news_from_redis에서 news['category']가 이미 설정되어 있음
+            cat_name = news.get('category', CATEGORIES['others']['name']) 
             if cat_name in category_counts_dict: 
                 category_counts_dict[cat_name] += 1
             else: 
-                # CATEGORIES에 정의되지 않은 카테고리 이름이라면 'Others'로 분류
-                logger.warning(f"get_trends: News item '{news.get('title', 'N/A')[:50]}' has unknown category '{cat_name}', assigning to 'Others'.")
+                # CATEGORIES에 정의되지 않은 카테고리 이름이라면 'Others'로 분류 (예외 케이스)
+                logger.warning(f"get_trends: News item '{news.get('title', 'N/A')[:50]}' has an unexpected category name '{cat_name}'. Assigning to 'Others'.")
                 category_counts_dict[CATEGORIES['others']['name']] += 1
 
         category_distribution = [{'category': cat, 'count': count} for cat, count in category_counts_dict.items()]
