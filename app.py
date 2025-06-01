@@ -89,6 +89,7 @@ def fetch_news_from_redis():
     news_pattern = re.compile(r'^news-(\d{8})-(\d{3})$')
     keys = [key for key in redis_client.scan_iter('news-*') if news_pattern.match(key)]
     
+    # Pipeline으로 여러 GET 요청을 한 번에 처리
     pipe = redis_client.pipeline()
     for key in keys:
         pipe.get(key)
@@ -99,42 +100,27 @@ def fetch_news_from_redis():
         if value:
             try:
                 news_item = json.loads(value)
-                news_data = {
-                    'title': news_item.get('title', ''),
-                    'link': news_item.get('link', ''),
-                    'summary': news_item.get('summary', ''),
-                    'published': news_item.get('published', ''),
-                    'source': news_item.get('source', ''),
-                    'id': news_item.get('id', ''),
-                    'category': news_item.get('category', ''),
-                    'redis_key': key
-                }
+                # Access the nested 'value' object
+                news_data = news_item.get('value', {})
+                news_data['redis_key'] = key
                 news_list.append(news_data)
             except Exception as e:
                 logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
     
-    # Robust date parsing function
+    # 날짜 파싱에서 offset-aware 통일
     def parse_date(item):
-        date_str = item.get('published', '').strip()
-        if not date_str:
-            logger.warning(f"No date string found in item: {item.get('redis_key', 'unknown key')}")
-            return datetime.min.replace(tzinfo=timezone.utc)
-        
         try:
-            dt = parser.parse(date_str)
+            dt = parser.parse(item.get('published', ''))
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             else:
                 dt = dt.astimezone(timezone.utc)
             return dt
-        except Exception as e:
-            logger.warning(f"Date parsing failed for item {item.get('redis_key', 'unknown key')} with date '{date_str}': {e}")
+        except:
             return datetime.min.replace(tzinfo=timezone.utc)
-    
+
     news_list.sort(key=parse_date, reverse=True)
     return news_list
-
-
 
 @app.route('/')
 def index():
