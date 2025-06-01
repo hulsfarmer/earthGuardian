@@ -8,6 +8,7 @@ from collections import Counter
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import nltk
+import redis
 import re
 
 app = Flask(__name__)
@@ -30,7 +31,7 @@ except Exception as e:
         logger.error(f"Failed to download NLTK resources: {download_e}")
 
 
-# 카테고리 키워드 정의 - 더 다양한 키워드 포함 (이 부분은 유지됩니다)
+# 카테고리 키워드 정의
 CATEGORIES = {
     'climate_change': {
         'name': 'Climate Change',
@@ -67,7 +68,6 @@ CATEGORIES = {
 }
 
 # Redis 연결 설정 (환경변수 또는 기본값 사용)
-import redis
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
@@ -149,13 +149,15 @@ def index():
     
     for news in news_items:
         # CATEGORIES 딕셔너리의 실제 카테고리 이름과 일치하는지 확인
+        found_category = False
         for category_id, category_info in CATEGORIES.items():
             if news.get('category') == category_info['name']:
                 categorized_news[category_id].append(news)
+                found_category = True
                 break 
         # 만약 news.get('category')가 CATEGORIES에 정의되지 않은 카테고리라면 'Others'에 추가
-        else:
-            categorized_news['others'].append(news) # Ensure uncategorized news go to 'Others'
+        if not found_category:
+            categorized_news['others'].append(news) 
     
     for cat_id, news_list in categorized_news.items():
         logger.info(f"Category '{CATEGORIES[cat_id]['name']}': {len(news_list)} news items")
@@ -200,7 +202,7 @@ def get_trends():
                 logger.warning(f"Error parsing date for news item {item.get('title', 'N/A')}: {e}")
                 continue
                 
-        # --- 실제 트렌드 데이터 계산 로직 (이 부분이 이번에 제대로 수정되었습니다!) ---
+        # --- 실제 트렌드 데이터 계산 로직 ---
         
         # 1. 키워드 빈도 계산
         all_words = []
@@ -219,7 +221,8 @@ def get_trends():
                 logger.error(f"Error tokenizing/filtering words for news item: {e}")
                 continue
         
-        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental']) # 추가 제외 키워드
+        # 'climate', 'energy', 'environmental' 같은 일반적인 환경 키워드도 제외
+        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental']) 
         filtered_keywords = [word for word in all_words if word not in common_exclude_keywords]
 
         keyword_counts = Counter(filtered_keywords)
