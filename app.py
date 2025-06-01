@@ -271,7 +271,7 @@ def get_trends():
             'european union': ['eu', 'european union', 'europe'],
             'united kingdom': ['uk', 'united kingdom', 'britain', 'british'],
             'japan': ['japan', 'japanese'],
-            'south korea': ['south korea', 'korean', 'korea'],
+            'south korea': ['south korea', 'korea', 'korean'], # 'korea' 추가
             'australia': ['australia', 'australian'],
             'brazil': ['brazil', 'brazilian'],
             'russia': ['russia', 'russian'],
@@ -304,8 +304,7 @@ def get_trends():
 
 @app.route('/trends')
 def trends_page():
-    """트렌드 페이지 렌더링"""
     return render_template('trends.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) # 개발 환경에서는 5000 포트 사용을 명시
+    app.run(debug=True, port=5000)
