@@ -192,18 +192,18 @@ def fetch_news_from_redis():
         
     def parse_date_for_sort(item):
         date_str = item.get('published', '')
-        if not date_str:
-            return datetime.min.replace(tzinfo=timezone.utc) # 파싱할 수 없으면 최소 날짜 반환
-        try:
-            dt = parser.parse(date_str)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            else:
-                dt = dt.astimezone(timezone.utc)
-            return dt
-        except Exception as e:
-            logger.error(f"parse_date_for_sort: Error parsing date '{date_str}' for news item '{item.get('title', 'N/A')[:50]}...': {e}")
-            return datetime.min.replace(tzinfo=timezone.utc)
+    if not date_str:
+        logger.warning(f"parse_date_for_sort: No published date for '{item.get('title', 'N/A')[:50]}'.")
+        return datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        dt = parser.parse(date_str, dayfirst=False, yearfirst=False, ignoretz=False)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception as e:
+        logger.error(f"parse_date_for_sort: Failed to parse date '{date_str}' for '{item.get('title', 'N/A')[:50]}': {e}")
+        return datetime.min.replace(tzinfo=timezone.utc)
+        
 
     for item in news_list:
         item['_parsed_published_date'] = parse_date_for_sort(item)
