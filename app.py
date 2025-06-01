@@ -159,7 +159,7 @@ def get_trends():
         # 기간 내 뉴스 필터링
         recent_news = [
             item for item in news_items
-            if parser.parse(item['published']) >= cutoff
+            if parser.parse(item.get('published', '')) >= cutoff
         ]
         
         # 트렌드 데이터 생성
