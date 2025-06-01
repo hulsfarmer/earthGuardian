@@ -71,8 +71,9 @@ def load_news_data():
 
 def categorize_news(news_item):
     """뉴스 항목을 카테고리로 분류"""
-    title_lower = news_item['title'].lower()
-    summary_lower = news_item['summary'].lower()
+    # Use get method to provide default empty string if key is missing
+    title_lower = news_item.get('title', '').lower()
+    summary_lower = news_item.get('summary', '').lower()
     
     for category_id, category in CATEGORIES.items():
         if category_id == 'others':
@@ -99,8 +100,10 @@ def fetch_news_from_redis():
         if value:
             try:
                 news_item = json.loads(value)
-                news_item['redis_key'] = key
-                news_list.append(news_item)
+                # Access the nested 'value' object
+                news_data = news_item.get('value', {})
+                news_data['redis_key'] = key
+                news_list.append(news_data)
             except Exception as e:
                 logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
     
@@ -126,7 +129,7 @@ def index():
     return render_template('index.html',
                          categorized_news=categorized_news,
                          categories=CATEGORIES,
-                         sources=set(item['source'] for item in news_items),
+                         sources=set(item.get('source', 'Unknown') for item in news_items),
                          current_category='',
                          current_source='',
                          current_sort='newest')
