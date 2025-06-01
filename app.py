@@ -118,7 +118,7 @@ def fetch_news_from_redis():
                 news_data['redis_key'] = key
                 
                 # Redis에 'category' 필드가 이미 있거나, 빈 값이 아니라면 그대로 사용
-                # 그렇지 않다면 categorize_news 함수를 통해 분류 (이 로직은 유지됩니다)
+                # 그렇지 않다면 categorize_news 함수를 통해 분류
                 if 'category' not in news_data or not news_data['category']:
                     news_data['category'] = categorize_news(news_data) 
                 
@@ -202,7 +202,7 @@ def get_trends():
                 logger.warning(f"Error parsing date for news item {item.get('title', 'N/A')}: {e}")
                 continue
                 
-        # --- 실제 트렌드 데이터 계산 로직 ---
+        # --- 실제 트렌드 데이터 계산 로직 (★★이 부분이 제대로 수정되었습니다!★★) ---
         
         # 1. 키워드 빈도 계산
         all_words = []
