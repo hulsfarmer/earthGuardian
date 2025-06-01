@@ -119,6 +119,7 @@ def fetch_news_from_redis():
     Redis에서 모든 뉴스 항목을 가져와 정렬하고,
     Redis 데이터에 'category' 필드가 있으면 그것을 우선 사용합니다.
     없거나 유효하지 않으면 categorize_news 함수를 통해 분류합니다.
+    (이전 `index.html`이 잘 작동했던 방식 유지)
     """
     if redis_client is None:
         logger.error("fetch_news_from_redis: Redis client is not connected. Returning empty list.")
@@ -156,7 +157,7 @@ def fetch_news_from_redis():
                 news_data = news_item.get('value', {}) # 'value' 키 아래에 실제 데이터가 있다고 가정
                 news_data['redis_key'] = key
                 
-                # --- 핵심 변경 사항: Redis의 category 필드 우선 사용 및 Fallback ---
+                # --- 기존 뉴스 페이지 작동 방식 유지: Redis category 우선 사용 및 Fallback ---
                 redis_category_name = news_data.get('category')
                 
                 # Redis에서 가져온 category 값이 유효한지 확인 (CATEGORIES의 name 값에 있는지)
@@ -313,7 +314,7 @@ def get_trends():
                 'sample_news': []
             })
                 
-        # --- 실제 트렌드 데이터 계산 로직 (하드코딩 제거) ---
+        # --- 핵심 변경 사항: 실제 트렌드 데이터 계산 로직 (하드코딩 제거) ---
         
         # 1. 키워드 빈도 계산
         all_words = []
@@ -335,7 +336,7 @@ def get_trends():
                 continue
         
         # 일반적인 불용어 외에 뉴스 내용에서 자주 등장하지만 의미 없는 키워드 추가
-        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental', 'find', 'also', 'one', 'new', 'years', 'us', 'may', 'would', 'could', 'get', 'like', 'just', 'still', 'big', 'back', 'take', 'make', 'first', 'last', 'well', 'much', 'many', 'think', 'even', 'said', 'going', 'help', 'across', 'around', 'among', 'might', 'must', 'need', 'next', 'only', 'over', 'part', 'per', 'per cent', 'per day', 'per year', 'place', 'set', 'show', 'side', 'since', 'small', 'some', 'than', 'that', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'too', 'under', 'up', 'upon', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'within', 'without', 'won', 'would', 'yes', 'yet', 'you', 'your', 'able', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'from', 'etc', 'etcetera', 'et_cetera', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']) 
+        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental', 'find', 'also', 'one', 'new', 'years', 'us', 'may', 'would', 'could', 'get', 'like', 'just', 'still', 'big', 'back', 'take', 'make', 'first', 'last', 'well', 'much', 'many', 'think', 'even', 'said', 'going', 'help', 'across', 'around', 'among', 'might', 'must', 'need', 'next', 'only', 'over', 'part', 'per', 'per cent', 'per day', 'per year', 'place', 'set', 'show', 'side', 'since', 'small', 'some', 'than', 'that', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'too', 'under', 'up', 'upon', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'within', 'without', 'won', 'would', 'yes', 'yet', 'you', 'your', 'able', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'within', 'without', 'won', 'would', 'yes', 'yet', 'you', 'your', 'yours', 'yourself', 'yourselves', 'from', 'etc', 'etcetera', 'et_cetera', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']) 
         filtered_keywords = [word for word in all_words if word not in common_exclude_keywords]
 
         keyword_counts = Counter(filtered_keywords)
@@ -347,11 +348,11 @@ def get_trends():
         source_distribution = [{'source': source, 'count': count} for source, count in source_counts.most_common()]
         logger.debug(f"get_trends: Source distribution calculated: {source_distribution}")
 
-        # 3. 카테고리 분포 계산 (Redis의 category 값을 사용하거나, 없으면 'Others')
+        # 3. 카테고리 분포 계산
         category_counts_dict = {CATEGORIES[c_id]['name']: 0 for c_id in CATEGORIES} 
         
         for news in recent_news:
-            cat_name = news.get('category', CATEGORIES['others']['name']) 
+            cat_name = news.get('category', CATEGORIES['others']['name']) # category 필드가 없으면 'Others'로 간주
             
             if cat_name in category_counts_dict: 
                 category_counts_dict[cat_name] += 1
