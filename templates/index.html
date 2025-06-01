@@ -184,7 +184,7 @@
                                     <span class="text-xs md:text-sm text-gray-500 ml-2">{{ news.source }}</span>
                                 </div>
                                 <p class="text-xs md:text-sm text-gray-600 mb-3">{{ news.published }}</p>
-                                <p class="text-sm md:text-base text-gray-700">{{ news.summary[:150] }}...</p>
+                                <p class="text-sm md:text-base text-gray-700">{{ (news.summary | default('No summary available'))[:150] }}...</p>
                                 <a href="{{ news.link }}" target="_blank" 
                                    class="inline-block mt-3 text-green-600 hover:text-green-800 font-semibold text-sm md:text-base">
                                     Read More →
