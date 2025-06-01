@@ -100,25 +100,32 @@ def fetch_news_from_redis():
         if value:
             try:
                 news_item = json.loads(value)
-                # Access the nested 'value' object
-                news_data = news_item.get('value', {})
-                news_data['redis_key'] = key
+                # 여기서부터 수정: 새 구조 반영
+                news_data = {
+                    'title': news_item.get('title', ''),
+                    'link': news_item.get('link', ''),
+                    'summary': news_item.get('summary', ''),
+                    'published': news_item.get('published', ''),
+                    'source': news_item.get('source', ''),
+                    'id': news_item.get('id', ''),
+                    'category': news_item.get('category', ''),
+                    'redis_key': key
+                }
                 news_list.append(news_data)
             except Exception as e:
                 logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
     
-    # 날짜 파싱에서 offset-aware 통일
     def parse_date(item):
         try:
             dt = parser.parse(item.get('published', ''))
-            if dt.tzinfo is None:
+            if not dt.tzinfo:
                 dt = dt.replace(tzinfo=timezone.utc)
             else:
                 dt = dt.astimezone(timezone.utc)
             return dt
         except:
             return datetime.min.replace(tzinfo=timezone.utc)
-
+            
     news_list.sort(key=parse_date, reverse=True)
     return news_list
 
