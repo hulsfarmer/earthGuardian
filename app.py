@@ -107,11 +107,18 @@ def fetch_news_from_redis():
             except Exception as e:
                 logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
     
+    # 날짜 파싱에서 offset-aware 통일
     def parse_date(item):
         try:
-            return parser.parse(item.get('published', ''))
+            dt = parser.parse(item.get('published', ''))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            else:
+                dt = dt.astimezone(timezone.utc)
+            return dt
         except:
-            return datetime.min
+            return datetime.min.replace(tzinfo=timezone.utc)
+
     news_list.sort(key=parse_date, reverse=True)
     return news_list
 
