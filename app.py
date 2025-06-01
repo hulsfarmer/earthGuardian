@@ -119,7 +119,6 @@ def fetch_news_from_redis():
     Redis에서 모든 뉴스 항목을 가져와 정렬하고,
     Redis 데이터에 'category' 필드가 있으면 그것을 우선 사용합니다.
     없거나 유효하지 않으면 categorize_news 함수를 통해 분류합니다.
-    (이전 `index.html`이 잘 작동했던 방식 유지)
     """
     if redis_client is None:
         logger.error("fetch_news_from_redis: Redis client is not connected. Returning empty list.")
@@ -157,9 +156,10 @@ def fetch_news_from_redis():
                 news_data = news_item.get('value', {}) # 'value' 키 아래에 실제 데이터가 있다고 가정
                 news_data['redis_key'] = key
                 
-                # Redis의 category 필드 우선 사용 및 Fallback
+                # --- 핵심 변경 사항: Redis의 category 필드 우선 사용 및 Fallback ---
                 redis_category_name = news_data.get('category')
                 
+                # Redis에서 가져온 category 값이 유효한지 확인 (CATEGORIES의 name 값에 있는지)
                 is_valid_redis_category = False
                 if redis_category_name:
                     for cat_info in CATEGORIES.values():
@@ -171,8 +171,10 @@ def fetch_news_from_redis():
                     news_data['category'] = redis_category_name
                     logger.debug(f"fetch_news_from_redis: Using Redis category '{redis_category_name}' for '{news_data.get('title', 'N/A')[:40]}...'.")
                 else:
+                    # Redis에 category가 없거나 유효하지 않으면 categorize_news 호출
                     news_data['category'] = categorize_news(news_data) 
                     logger.debug(f"fetch_news_from_redis: Redis category for '{news_data.get('title', 'N/A')[:40]}...' was invalid/missing ('{redis_category_name}'). Classified as '{news_data['category']}'.")
+                # -------------------------------------------------------------------
                 
                 news_list.append(news_data)
             except json.JSONDecodeError as e:
@@ -217,14 +219,18 @@ def index():
 
     if not news_items:
         logger.warning("index route: No news items returned by fetch_news_from_redis. Main page will be empty.")
+        # news_items가 비어있을 때 빈 카테고리 딕셔너리 생성
         categorized_news = {category_id: [] for category_id in CATEGORIES.keys()} 
     else:
         logger.info(f"index route: Preparing to display {len(news_items)} news items on the main page.")
         categorized_news = {category_id: [] for category_id in CATEGORIES.keys()}
         
         for news in news_items:
+            # news['category'] 필드에 카테고리 이름 (예: 'Climate Change')이 있다고 가정
+            # fetch_news_from_redis에서 이미 category 필드가 설정되어 있으므로, 여기서는 사용하기만 하면 됩니다.
             news_category_name = news.get('category', CATEGORIES['others']['name']) 
             
+            # CATEGORIES 딕셔너리의 name 값과 일치하는 category_id를 찾아서 분류
             matched_category_id = None
             for category_id, category_info in CATEGORIES.items():
                 if news_category_name == category_info['name']:
@@ -234,12 +240,14 @@ def index():
             if matched_category_id:
                 categorized_news[matched_category_id].append(news)
             else:
+                # Redis에서 가져온 카테고리 이름이 CATEGORIES에 정의되지 않았거나,
+                # fetch_news_from_redis에서 'Others'로 분류된 경우, 여기도 'others'로
                 logger.warning(f"index route: News item '{news.get('title', 'N/A')[:50]}' has an unexpected category name '{news_category_name}'. Assigning to 'Others'.")
                 categorized_news['others'].append(news) 
         
     for cat_id, news_list_in_cat in categorized_news.items():
         logger.info(f"index route: Category '{CATEGORIES[cat_id]['name']}' (ID: {cat_id}) has {len(news_list_in_cat)} news items.")
-        if news_list_in_cat and cat_id != 'others': 
+        if news_list_in_cat and cat_id != 'others': # others가 아닌 카테고리에 뉴스가 있다면 샘플 로깅
             logger.debug(f"index route: Sample from '{CATEGORIES[cat_id]['name']}': Title='{news_list_in_cat[0].get('title', 'N/A')[:50]}...'")
 
     sources_set = set(item.get('source', 'Unknown') for item in news_items if item.get('source'))
@@ -305,7 +313,7 @@ def get_trends():
                 'sample_news': []
             })
                 
-        # --- 실제 트렌드 데이터 계산 로직 (수정 및 재확인) ---
+        # --- 실제 트렌드 데이터 계산 로직 (하드코딩 제거) ---
         
         # 1. 키워드 빈도 계산
         all_words = []
@@ -327,16 +335,14 @@ def get_trends():
                 continue
         
         # 일반적인 불용어 외에 뉴스 내용에서 자주 등장하지만 의미 없는 키워드 추가
-        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental', 'find', 'also', 'one', 'new', 'years', 'us', 'may', 'would', 'could', 'get', 'like', 'just', 'still', 'big', 'back', 'take', 'make', 'first', 'last', 'well', 'much', 'many', 'think', 'even', 'said', 'going', 'help', 'across', 'around', 'among', 'might', 'must', 'need', 'next', 'only', 'over', 'part', 'per', 'per cent', 'per day', 'per year', 'place', 'set', 'show', 'side', 'since', 'small', 'some', 'than', 'that', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'too', 'under', 'up', 'upon', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'within', 'without', 'won', 'would', 'yes', 'yet', 'you', 'your', 'able', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'from', 'etc', 'etcetera', 'et_cetera', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']) # 더 많은 일반 불용어 추가
+        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country', 'state', 'million', 'billion', 'week', 'year', 'time', 'people', 'climate', 'energy', 'environmental', 'find', 'also', 'one', 'new', 'years', 'us', 'may', 'would', 'could', 'get', 'like', 'just', 'still', 'big', 'back', 'take', 'make', 'first', 'last', 'well', 'much', 'many', 'think', 'even', 'said', 'going', 'help', 'across', 'around', 'among', 'might', 'must', 'need', 'next', 'only', 'over', 'part', 'per', 'per cent', 'per day', 'per year', 'place', 'set', 'show', 'side', 'since', 'small', 'some', 'than', 'that', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'too', 'under', 'up', 'upon', 'very', 'want', 'was', 'way', 'we', 'well', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'within', 'without', 'won', 'would', 'yes', 'yet', 'you', 'your', 'able', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'from', 'etc', 'etcetera', 'et_cetera', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']) 
         filtered_keywords = [word for word in all_words if word not in common_exclude_keywords]
 
         keyword_counts = Counter(filtered_keywords)
         top_keywords = [{'keyword': keyword, 'count': count} for keyword, count in keyword_counts.most_common(20)]
         logger.debug(f"get_trends: Top keywords calculated: {top_keywords}")
 
-        # 2. 출처 분포 계산 (핵심 재확인)
-        # 모든 recent_news 아이템에서 'source' 필드를 가져와 카운트합니다.
-        # 'source' 필드가 없으면 'Unknown'으로 처리합니다.
+        # 2. 출처 분포 계산
         source_counts = Counter(news.get('source', 'Unknown') for news in recent_news)
         source_distribution = [{'source': source, 'count': count} for source, count in source_counts.most_common()]
         logger.debug(f"get_trends: Source distribution calculated: {source_distribution}")
@@ -363,18 +369,18 @@ def get_trends():
             'united states': ['united states', 'us', 'usa', 'america', 'american'],
             'china': ['china', 'chinese'],
             'india': ['india', 'indian'],
-            'european union': ['eu', 'european union', 'europe', 'brussels'], # 'brussels' 추가
-            'united kingdom': ['uk', 'united kingdom', 'britain', 'british', 'london'], # 'london' 추가
-            'japan': ['japan', 'japanese', 'tokyo'], # 'tokyo' 추가
-            'south korea': ['south korea', 'korea', 'korean', 'seoul'], # 'seoul' 추가
-            'australia': ['australia', 'australian', 'canberra', 'sydney'], # 'canberra', 'sydney' 추가
-            'brazil': ['brazil', 'brazilian', 'brasilia'], # 'brasilia' 추가
-            'russia': ['russia', 'russian', 'moscow'], # 'moscow' 추가
-            'canada': ['canada', 'canadian', 'ottawa'], # 'ottawa' 추가
-            'germany': ['germany', 'german', 'berlin'], # 'berlin' 추가
-            'france': ['france', 'french', 'paris'], # 'paris' 추가
-            'italy': ['italy', 'italian', 'rome'], # 'rome' 추가
-            'spain': ['spain', 'spanish', 'madrid'] # 'madrid' 추가
+            'european union': ['eu', 'european union', 'europe', 'brussels'],
+            'united kingdom': ['uk', 'united kingdom', 'britain', 'british', 'london'],
+            'japan': ['japan', 'japanese', 'tokyo'],
+            'south korea': ['south korea', 'korea', 'korean', 'seoul'],
+            'australia': ['australia', 'australian', 'canberra', 'sydney'],
+            'brazil': ['brazil', 'brazilian', 'brasilia'],
+            'russia': ['russia', 'russian', 'moscow'],
+            'canada': ['canada', 'canadian', 'ottawa'],
+            'germany': ['germany', 'german', 'berlin'],
+            'france': ['france', 'french', 'paris'],
+            'italy': ['italy', 'italian', 'rome'],
+            'spain': ['spain', 'spanish', 'madrid']
         }
         
         for news in recent_news:
@@ -395,7 +401,7 @@ def get_trends():
         })
 
     except Exception as e:
-        logger.error(f"get_trends: Unhandled error generating trends: {str(e)}", exc_info=True) # exc_info=True로 전체 traceback 로깅
+        logger.error(f"get_trends: Unhandled error generating trends: {str(e)}", exc_info=True)
         return jsonify({'error': 'Failed to generate trends', 'details': str(e)}), 500
 
 @app.route('/trends')
