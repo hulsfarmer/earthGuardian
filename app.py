@@ -202,7 +202,7 @@ def get_trends():
                 logger.warning(f"Error parsing date for news item {item.get('title', 'N/A')}: {e}")
                 continue
                 
-        # --- 실제 트렌드 데이터 계산 로직 (★★이 부분이 제대로 수정되었습니다!★★) ---
+        # --- 실제 트렌드 데이터 계산 로직 --- (★★하드코딩 제거 완료★★)
         
         # 1. 키워드 빈도 계산
         all_words = []
