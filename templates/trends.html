@@ -1,183 +1,327 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
+
 <head>
+
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Earth Guardian – Environmental Trends</title>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
+
 .chart-container{height:300px}
+
 .chart-news-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+
 .news-container{max-height:300px;overflow-y:auto}
+
 .news-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
+
 .news-item:hover{background:#f3f4f6}
+
 @media (max-width:768px){.chart-news-grid{grid-template-columns:1fr}}
+
 </style>
+
 </head>
+
 <body class="bg-gray-100">
+
 <header class="bg-green-600 text-white sticky top-0 z-50">
+
  <div class="container mx-auto p-4 flex justify-between">
+
   <a href="/" class="text-3xl font-bold">Earth Guardian</a>
+
   <nav class="space-x-6">
+
    <a href="/"       class="hover:underline">News</a>
+
    <a href="/trends" class="font-semibold">Trends</a>
+
    <a href="/reports" class="hover:underline">Reports</a>
+
   </nav>
+
  </div>
+
 </header>
 
+
+
 <main class="container mx-auto p-4">
-  <div class="bg-white rounded shadow p-4 mb-6 flex justify-between items-center">
+
+ <!-- 기간 선택 -->
+
+ <div class="bg-white rounded shadow p-4 mb-6 flex justify-between items-center">
+
   <h2 class="text-xl font-bold">Trend Analysis</h2>
+
   <div>
+
    <button id="weeklyBtn"  class="btn-period">Weekly</button>
+
    <button id="monthlyBtn" class="btn-period">Monthly</button>
+
   </div>
+
  </div>
 
-  <div id="charts"></div>
+
+
+ <!-- 키워드 / 출처 / 카테고리 / 국가 -->
+
+ <div id="charts"></div>
+
 </main>
 
+
+
 <script>
+
 const $ = sel => document.querySelector(sel);
+
 const btnCls='px-3 py-1 rounded text-white mx-1';                  // shortcut
 
+
+
 function setPeriodBtn(active){
+
  ['weekly','monthly'].forEach(p=>{
+
    const el = document.getElementById(p+'Btn');
+
    el.className = btnCls + (p===active? ' bg-green-700':' bg-green-500');
+
  });
+
 }
 
-// 색상을 동적으로 생성하는 헬퍼 함수 추가
-function generateRandomColors(num) {
-    const colors = [];
-    for (let i = 0; i < num; i++) {
-        const hue = (i * 137.508) % 360; // Golden angle approximation
-        colors.push(`hsl(${hue}, 70%, 60%)`);
-    }
-    return colors;
-}
+
 
 async function loadTrends(period='weekly'){
+
  setPeriodBtn(period);
+
  const res = await fetch(`/api/trends?period=${period}`);
+
  const data=await res.json();
+
  if(data.error){alert('No data');return}
 
- // API 응답 데이터 구조 상세 확인 (이 로그가 중요!)
- console.log('=== API Response Data ===');
- console.log('Top Keywords:', data.top_keywords);
- console.log('Source Distribution:', data.source_distribution); // 이 로그가 중요!
- console.log('Category Distribution:', data.category_distribution);
- console.log('Country Distribution:', data.country_distribution);
- console.log('Sample News:', data.sample_news);
- 
+
+
  // --- 키워드 차트 & 목록 ----------------
+
  const chartsDiv=document.getElementById("charts");
+
  chartsDiv.innerHTML=`
+
    <div class="chart-news-grid">
+
      <div class="bg-white p-4 rounded shadow">
+
        <h3 class="font-semibold mb-2">Top 20 Keywords</h3>
+
        <canvas id="kwChart"></canvas>
+
      </div>
+
      <div class="bg-white p-4 rounded shadow">
+
        <h3 id="kwTitle" class="font-semibold mb-2">Related News</h3>
+
        <div id="kwNews" class="news-container"></div>
+
      </div>
+
    </div>
 
+
+
    <div class="chart-news-grid">
+
      <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Sources</h3><canvas id="srcChart"></canvas></div>
+
      <div class="bg-white p-4 rounded shadow"><h3 id="srcTitle" class="font-semibold mb-2">Source News</h3><div id="srcNews" class="news-container"></div></div>
+
    </div>
 
+
+
    <div class="chart-news-grid">
+
      <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Categories</h3><canvas id="catChart"></canvas></div>
+
      <div class="bg-white p-4 rounded shadow"><h3 id="catTitle" class="font-semibold mb-2">Category News</h3><div id="catNews" class="news-container"></div></div>
+
    </div>
 
+
+
    <div class="chart-news-grid">
+
      <div class="bg-white p-4 rounded shadow"><h3 class="font-semibold mb-2">Countries</h3><canvas id="ctyChart"></canvas></div>
+
      <div class="bg-white p-4 rounded shadow"><h3 id="ctyTitle" class="font-semibold mb-2">Country News</h3><div id="ctyNews" class="news-container"></div></div>
+
    </div>
+
  `;
 
+
+
  // helper - 차트 클릭 시 뉴스목록
+
  function makeNews(list, boxId){
+
    $(boxId).innerHTML = list.length
+
      ? list.map(n=>`<div class="news-item" onclick="window.open('${n.link}','_blank')">${n.title}</div>`).join('')
+
      : '<p class="text-sm text-gray-500">No news</p>';
+
  }
 
+
+
  // Keyword Chart
+
  const kwCtx=$("#kwChart").getContext('2d');
+
  new Chart(kwCtx,{
+
    type:'bar',
+
    data:{labels:data.top_keywords.map(k=>k.keyword),
+
          datasets:[{data:data.top_keywords.map(k=>k.count),backgroundColor:'#4ade80'}]},
+
    options:{onClick:(e,els)=>{
+
      if(!els.length) return;
+
      const kw=data.top_keywords[els[0].index].keyword.toLowerCase();
+
      const rel=data.sample_news.filter(n=>(n.title+n.summary).toLowerCase().includes(kw));
+
      $("#kwTitle").textContent=`News about "${kw}"`;
+
      makeNews(rel,"#kwNews");
+
    },plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+
  });
 
- // Source Chart (backgroundColor 추가)
+
+
+ // Source Chart
+
  const srcCtx=$("#srcChart").getContext('2d');
- const sourceColors = generateRandomColors(data.source_distribution.length); // 색상 생성
+
  new Chart(srcCtx,{
+
    type:'pie',
+
    data:{labels:data.source_distribution.map(s=>s.source),
-         datasets:[{data:data.source_distribution.map(s=>s.count), backgroundColor: sourceColors}]}, // backgroundColor 적용
+
+         datasets:[{data:data.source_distribution.map(s=>s.count)}]},
+
    options:{onClick:(e,els)=>{
+
      if(!els.length) return;
+
      const src=data.source_distribution[els[0].index].source;
+
      const rel=data.sample_news.filter(n=>n.source===src);
+
      $("#srcTitle").textContent=`News from ${src}`;
+
      makeNews(rel,"#srcNews");
+
    }}
+
  });
 
- // Category Chart (backgroundColor 추가)
+
+
+ // Category Chart
+
  const catCtx=$("#catChart").getContext('2d');
- const categoryColors = generateRandomColors(data.category_distribution.length); // 색상 생성
+
  new Chart(catCtx,{
+
    type:'doughnut',
+
    data:{labels:data.category_distribution.map(c=>c.category),
-         datasets:[{data:data.category_distribution.map(c=>c.count), backgroundColor: categoryColors}]}, // backgroundColor 적용
+
+         datasets:[{data:data.category_distribution.map(c=>c.count)}]},
+
    options:{onClick:(e,els)=>{
+
      if(!els.length) return;
+
      const cat=data.category_distribution[els[0].index].category;
+
      const rel=data.sample_news.filter(n=>n.category===cat);
+
      $("#catTitle").textContent=`${cat} News`;
+
      makeNews(rel,"#catNews");
+
    }}
+
  });
+
+
 
  // Country Chart
+
  const ctyCtx=$("#ctyChart").getContext('2d');
+
  new Chart(ctyCtx,{
+
    type:'bar',
+
    data:{labels:data.country_distribution.map(c=>c.country),
+
          datasets:[{data:data.country_distribution.map(c=>c.count),backgroundColor:'#60a5fa'}]},
+
    options:{onClick:(e,els)=>{
+
      if(!els.length) return;
+
      const cty=data.country_distribution[els[0].index].country.toLowerCase();
+
      const rel=data.sample_news.filter(n=>(n.title+n.summary).toLowerCase().includes(cty));
+
      $("#ctyTitle").textContent=`News about ${cty}`;
+
      makeNews(rel,"#ctyNews");
+
    },plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+
  });
 
+
+
  // 최초 뉴스박스
+
  makeNews(data.sample_news.slice(0,10),"#kwNews");
+
 }
+
 document.getElementById("weeklyBtn").onclick=_=>loadTrends('weekly');
+
 document.getElementById("monthlyBtn").onclick=_=>loadTrends('monthly');
+
 loadTrends('weekly');
+
 </script>
+
 </body></html>
