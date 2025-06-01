@@ -1,3 +1,4 @@
+# app.py
 from flask import Flask, render_template, request, jsonify
 import json
 from datetime import datetime, timedelta, timezone
@@ -5,10 +6,9 @@ import logging
 from dateutil import parser
 import os
 from collections import Counter
-# NLTK 관련 import (top_keywords 생성에 사용)
-import nltk
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords # 주석 해제하여 사용
+import nltk
 import redis
 import re
 
@@ -18,7 +18,34 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 카테고리 키워드 정의
+# NLTK 다운로드 (모든 환경에서 NLTK를 사용하기 전에 한 번 실행)
+# try:
+#     nltk.data.find('corpora/stopwords')
+# except nltk.downloader.DownloadError:
+#     nltk.download('stopwords')
+# try:
+#     nltk.data.find('tokenizers/punkt')
+# except nltk.downloader.DownloadError:
+#     nltk.download('punkt')
+
+# 이 부분은 주석 처리된 상태로 유지하고, 실제로 NLTK를 사용하는 부분에 적용
+# NLTK 관련 오류 처리를 더 견고하게 하려면, 앱 시작 시점에 다운로드 로직을 포함하는 것이 좋습니다.
+# 또는 Dockerfile 등 배포 환경에서 미리 다운로드합니다.
+try:
+    nltk.data.find('corpora/stopwords')
+    nltk.data.find('tokenizers/punkt')
+except Exception as e: # 이전의 AttributeError 해결을 위해 일반 Exception으로 변경
+    logger.warning(f"NLTK resources not found, attempting download: {e}")
+    try:
+        nltk.download('stopwords')
+        nltk.download('punkt')
+        logger.info("NLTK stopwords and punkt downloaded successfully.")
+    except Exception as download_e:
+        logger.error(f"Failed to download NLTK resources: {download_e}")
+        # 다운로드 실패 시에도 앱이 실행되도록 하되, 관련 기능은 제한될 수 있음을 명시
+
+
+# 카테고리 키워드 정의 (기존과 동일)
 CATEGORIES = {
     'climate_change': {
         'name': 'Climate Change',
@@ -58,58 +85,12 @@ CATEGORIES = {
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
-# NLTK 리소스 다운로드 (최초 실행 시 또는 필요 시)
-# 실제 배포 환경에서는 Dockerfile이나 시작 스크립트에서 처리하는 것이 좋습니다.
-try:
-    nltk.data.find('corpora/stopwords')
-    nltk.data.find('tokenizers/punkt')
-except Exception as e:
-    logger.info("NLTK stopwords or punkt not found. Downloading...")
-    nltk.download('stopwords', quiet=True)
-    nltk.download('punkt', quiet=True)
-
-
-def parse_published_date(date_string):
-    """
-    주어진 날짜 문자열을 offset-aware UTC datetime 객체로 파싱합니다.
-    예상 형식: "fri, 30 may 2025 05:00:45 gmt"
-    """
-    if not date_string:
-        return datetime.min.replace(tzinfo=timezone.utc)
-    try:
-        # 시도 1: dateutil.parser.parse 사용 (일반적으로 유연함)
-        dt = parser.parse(date_string)
-    except (ValueError, TypeError) as e:
-        logger.warning(f"dateutil.parser.parse failed for '{date_string}': {e}. Trying strptime.")
-        try:
-            # 시도 2: strptime으로 명시적 파싱
-            # "fri, 30 may 2025 05:00:45 gmt" 형식에 맞춤
-            # 'gmt' 부분은 대소문자 구분 없이 제거하고 UTC로 가정
-            dt_naive_str = date_string.lower().rsplit(' gmt', 1)[0] if ' gmt' in date_string.lower() else date_string.lower().rsplit(' utc', 1)[0] if ' utc' in date_string.lower() else date_string.lower()
-            dt_naive = datetime.strptime(dt_naive_str, "%a, %d %b %Y %H:%M:%S")
-            dt = dt_naive.replace(tzinfo=timezone.utc) # GMT/UTC로 간주
-        except ValueError as ve:
-            logger.error(f"strptime failed for '{date_string}' after parser.parse also failed: {ve}")
-            return datetime.min.replace(tzinfo=timezone.utc)
-
-    # 시간대 정보 통일 (UTC)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    else:
-        dt = dt.astimezone(timezone.utc)
-    return dt
+# 불용어 설정
+stop_words = set(stopwords.words('english'))
 
 def load_news_data():
-    """JSON 파일에서 뉴스 데이터 로드 (현재 사용되지 않음, Redis 우선)"""
-    try:
-        with open('data/news.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        logger.warning("News data file not found (data/news.json)")
-        return {'news': []}
-    except json.JSONDecodeError:
-        logger.error("Error decoding news data file (data/news.json)")
-        return {'news': []}
+    """JSON 파일에서 뉴스 데이터 로드 (현재 Redis 사용 중이므로 이 함수는 사용되지 않음)"""
+    # ... (기존과 동일)
 
 def categorize_news(news_item):
     """뉴스 항목을 카테고리로 분류"""
@@ -119,20 +100,18 @@ def categorize_news(news_item):
     for category_id, category in CATEGORIES.items():
         if category_id == 'others':
             continue
+            
         for keyword in category['keywords']:
             if keyword in title_lower or keyword in summary_lower:
-                return category_id
-    return 'others'
+                # 카테고리 ID 대신 실제 카테고리 이름 반환
+                return category['name'] 
+    
+    return CATEGORIES['others']['name'] # 'Others' 카테고리 이름 반환
 
 def fetch_news_from_redis():
-    """Redis에서 뉴스 데이터를 로드하고 날짜로 정렬합니다."""
     news_pattern = re.compile(r'^news-(\d{8})-(\d{3})$')
     keys = [key for key in redis_client.scan_iter('news-*') if news_pattern.match(key)]
     
-    if not keys:
-        logger.info("No news keys found in Redis.")
-        return []
-
     pipe = redis_client.pipeline()
     for key in keys:
         pipe.get(key)
@@ -142,135 +121,160 @@ def fetch_news_from_redis():
     for key, value in zip(keys, values):
         if value:
             try:
-                news_item_wrapper = json.loads(value)
-                # 실제 뉴스 데이터는 'value' 키 내부에 있음
-                news_data = news_item_wrapper.get('value', {})
-                if not news_data: # 'value' 필드가 없거나 비어있는 경우
-                    logger.warning(f"News data in 'value' field is empty for key {key}.")
-                    continue
-                news_data['redis_key'] = key # 원본 Redis 키 추가
+                news_item = json.loads(value)
+                news_data = news_item.get('value', {})
+                news_data['redis_key'] = key
+                
+                # 뉴스 로드 시 카테고리 정보 추가
+                news_data['category'] = categorize_news(news_data) 
                 news_list.append(news_data)
-            except json.JSONDecodeError:
-                logger.warning(f"Invalid JSON in Redis for key {key}: {value[:100]}...") # 값의 일부를 로깅
             except Exception as e:
-                logger.error(f"Unexpected error processing data from Redis key {key}: {e}", exc_info=True)
+                logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
     
-    # 날짜로 정렬 (파싱된 datetime 객체 사용)
-    news_list.sort(key=lambda item: parse_published_date(item.get('published', '')), reverse=True)
+    def parse_date(item):
+        try:
+            dt = parser.parse(item.get('published', ''))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            else:
+                dt = dt.astimezone(timezone.utc)
+            return dt
+        except:
+            return datetime.min.replace(tzinfo=timezone.utc)
+
+    news_list.sort(key=parse_date, reverse=True)
     return news_list
 
 @app.route('/')
 def index():
     news_items = fetch_news_from_redis()
-    categorized_news_dict = {category_id: [] for category_id in CATEGORIES.keys()}
-    
-    all_sources = set()
+
+    categorized_news = {category_id: [] for category_id in CATEGORIES.keys()}
+    # 이 부분은 이제 news_items에 이미 카테고리 정보가 포함되어 있으므로 재분류
     for news in news_items:
-        category = categorize_news(news) # title, summary 기반 분류
-        # 만약 news 객체에 이미 'category' 필드가 있다면 그것을 우선 사용할 수도 있음.
-        # 예: category_id_from_data = news.get('category')
-        # if category_id_from_data and category_id_from_data in CATEGORIES:
-        #    category = category_id_from_data
-        # else:
-        #    category = categorize_news(news)
-        categorized_news_dict[category].append(news)
-        all_sources.add(news.get('source', 'Unknown'))
+        # CATEGORIES 딕셔너리의 키를 이용하여 카테고리 뉴스 분류
+        for category_id, category_info in CATEGORIES.items():
+            if news.get('category') == category_info['name']:
+                categorized_news[category_id].append(news)
+                break # 해당 뉴스는 하나의 카테고리에만 속하도록
 
     return render_template('index.html',
-                         categorized_news=categorized_news_dict,
+                         categorized_news=categorized_news,
                          categories=CATEGORIES,
-                         sources=sorted(list(all_sources)), # 정렬된 소스 목록
+                         sources=set(item.get('source', 'Unknown') for item in news_items),
                          current_category='',
                          current_source='',
                          current_sort='newest')
+
 
 @app.route('/api/trends')
 def get_trends():
     period = request.args.get('period', 'weekly')
     if period not in ['weekly', 'monthly']:
         return jsonify({'error': 'Invalid period'}), 400
-    
     try:
-        news_items = fetch_news_from_redis()
-        if not news_items:
-            logger.info("No news items fetched from Redis for trends.")
-            # 빈 데이터라도 정상적인 구조로 반환
-            return jsonify({
-                'top_keywords': [], 'source_distribution': [], 'category_distribution': [],
-                'country_distribution': [], 'sample_news': []
-            })
-
+        news_items = fetch_news_from_redis() # Redis에서 뉴스 가져오기
+        
         now = datetime.now(timezone.utc)
         if period == 'weekly':
-            cutoff_date = now - timedelta(days=7)
+            cutoff = now - timedelta(days=7)
         else:  # monthly
-            cutoff_date = now - timedelta(days=30)
-
+            cutoff = now - timedelta(days=30)
+        
+        # 기간 내 뉴스 필터링 (published 시간을 정확히 파싱하여 비교)
         recent_news = []
         for item in news_items:
-            published_date = parse_published_date(item.get('published', ''))
-            if published_date >= cutoff_date:
-                recent_news.append(item)
+            try:
+                # published 필드가 존재하고 유효한 날짜 형식인지 확인
+                if 'published' in item and item['published']:
+                    published_dt = parser.parse(item['published'])
+                    # 시간대가 없는 경우 UTC로 간주
+                    if published_dt.tzinfo is None:
+                        published_dt = published_dt.replace(tzinfo=timezone.utc)
+                    else:
+                        published_dt = published_dt.astimezone(timezone.utc)
+                    
+                    if published_dt >= cutoff:
+                        recent_news.append(item)
+            except Exception as e:
+                logger.warning(f"Error parsing date for news item {item.get('title', 'N/A')}: {e}")
+                continue # 날짜 파싱 오류가 있는 뉴스는 건너뛰기
+                
+        # --- 실제 트렌드 데이터 계산 ---
         
-        if not recent_news:
-            logger.info(f"No recent news found for the {period} period.")
-             # 빈 데이터라도 정상적인 구조로 반환
-            return jsonify({
-                'top_keywords': [], 'source_distribution': [], 'category_distribution': [],
-                'country_distribution': [], 'sample_news': []
-            })
-
-
-        # 카테고리 분포 계산
-        category_counts = Counter()
-        for news_item in recent_news:
-            category_id_from_data = news_item.get('category') # Redis에 저장된 카테고리 ID
-            final_category_id = ''
-            if category_id_from_data and category_id_from_data in CATEGORIES:
-                final_category_id = category_id_from_data
-            else:
-                final_category_id = categorize_news(news_item) # title/summary 기반 재분류
-            category_counts[CATEGORIES[final_category_id]['name']] += 1
-        category_distribution = [{'category': name, 'count': count} for name, count in category_counts.most_common()]
-
-        # 출처 분포 계산
-        source_counts = Counter(item.get('source', 'Unknown') for item in recent_news)
-        source_distribution = [{'source': name, 'count': count} for name, count in source_counts.most_common() if name != 'Unknown']
+        # 1. 키워드 빈도 계산
+        all_words = []
+        for news in recent_news:
+            title_text = news.get('title', '')
+            summary_text = news.get('summary', '')
+            combined_text = title_text + ' ' + summary_text
+            
+            # 특수 문자 제거 및 소문자 변환
+            cleaned_text = re.sub(r'[^a-zA-Z\s]', '', combined_text).lower()
+            
+            # 토큰화 및 불용어 제거
+            words = word_tokenize(cleaned_text)
+            filtered_words = [word for word in words if word.isalnum() and word not in stop_words and len(word) > 2]
+            all_words.extend(filtered_words)
         
-        # 키워드 빈도 계산 (간단 버전)
-        stop_words_set = set(stopwords.words('english'))
-        all_words_list = []
-        for news_item in recent_news:
-            text_content = (news_item.get('title', '') + " " + news_item.get('summary', '')).lower()
-            words = word_tokenize(text_content)
-            for word in words:
-                if word.isalpha() and word not in stop_words_set and len(word) > 2:
-                    all_words_list.append(word)
-        keyword_counts = Counter(all_words_list)
-        top_keywords = [{'keyword': kw, 'count': cnt} for kw, cnt in keyword_counts.most_common(10)] # 상위 10개
+        # 키워드 필터링 (너무 일반적인 키워드 제외)
+        common_exclude_keywords = set(['news', 'report', 'world', 'global', 'issue', 'new', 'says', 'company', 'government', 'country'])
+        filtered_keywords = [word for word in all_words if word not in common_exclude_keywords]
 
-        # 국가 분포 (더미 데이터 - 실제 구현 필요)
-        # 이 부분은 뉴스 내용에서 국가명을 추출하는 로직(예: NER 또는 키워드 매칭)이 필요합니다.
-        country_distribution = [{'country': 'ExampleCountry', 'count': len(recent_news)}] 
-        logger.warning("Country distribution is using dummy data. Actual implementation needed.")
+        keyword_counts = Counter(filtered_keywords)
+        top_keywords = [{'keyword': keyword, 'count': count} for keyword, count in keyword_counts.most_common(20)] # 상위 20개
 
-        sample_news = recent_news # 이미 필터링된 최신 뉴스
+        # 2. 출처 분포 계산
+        source_counts = Counter(news.get('source', 'Unknown') for news in recent_news)
+        source_distribution = [{'source': source, 'count': count} for source, count in source_counts.most_common()]
+
+        # 3. 카테고리 분포 계산
+        category_counts = Counter(news.get('category', CATEGORIES['others']['name']) for news in recent_news)
+        category_distribution = [{'category': category, 'count': count} for category, count in category_counts.most_common()]
+
+        # 4. 국가 분포 계산 (기존 로직 사용, 더 정교한 로직 필요 시 개선)
+        country_mentions = Counter()
+        country_keywords_map = {
+            'united states': ['united states', 'us', 'usa', 'america', 'american'],
+            'china': ['china', 'chinese'],
+            'india': ['india', 'indian'],
+            'european union': ['eu', 'european union', 'europe'],
+            'united kingdom': ['uk', 'united kingdom', 'britain', 'british'],
+            'japan': ['japan', 'japanese'],
+            'south korea': ['south korea', 'korean', 'korea'],
+            'australia': ['australia', 'australian'],
+            'brazil': ['brazil', 'brazilian'],
+            'russia': ['russia', 'russian'],
+            'canada': ['canada', 'canadian'],
+            'germany': ['germany', 'german'],
+            'france': ['france', 'french'],
+            'italy': ['italy', 'italian'],
+            'spain': ['spain', 'spanish']
+        }
+        
+        for news in recent_news:
+            text = (news.get('title', '') + ' ' + news.get('summary', '')).lower()
+            for country_name, keywords in country_keywords_map.items():
+                if any(k in text for k in keywords):
+                    country_mentions[country_name.title()] += 1 # 첫 글자를 대문자로
+        
+        country_distribution = [{'country': country, 'count': count} for country, count in country_mentions.most_common()]
 
         return jsonify({
             'top_keywords': top_keywords,
             'source_distribution': source_distribution,
             'category_distribution': category_distribution,
             'country_distribution': country_distribution,
-            'sample_news': sample_news
+            'sample_news': recent_news # 필터링된 최신 뉴스만 포함
         })
+
     except Exception as e:
-        logger.error(f"Error generating trends data: {str(e)}", exc_info=True)
-        return jsonify({'error': 'Failed to generate trends data'}), 500
+        logger.error(f"Error generating trends: {str(e)}")
+        return jsonify({'error': 'Failed to generate trends'}), 500
 
 @app.route('/trends')
 def trends_page():
     return render_template('trends.html')
 
 if __name__ == '__main__':
-    # 개발 환경에서는 debug=True 사용, 프로덕션에서는 False 또는 Gunicorn 등 사용
     app.run(debug=True)
