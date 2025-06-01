@@ -344,7 +344,8 @@ def get_trends():
         logger.debug(f"get_trends: Top keywords calculated: {top_keywords}")
 
         # 2. 출처 분포 계산
-        source_counts = Counter(news.get('source', 'Unknown') for news in recent_news)
+        source_counts = Counter(news.get('source', 'Unknown').strip().lower() for news in recent_news)
+        #source_counts = Counter(news.get('source', 'Unknown') for news in recent_news)
         source_distribution = [{'source': source, 'count': count} for source, count in source_counts.most_common()]
         logger.debug(f"get_trends: Source distribution calculated: {source_distribution}")
 
