@@ -63,7 +63,7 @@ redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 try:
     nltk.data.find('corpora/stopwords')
     nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
+except Exception as e:
     logger.info("NLTK stopwords or punkt not found. Downloading...")
     nltk.download('stopwords', quiet=True)
     nltk.download('punkt', quiet=True)
