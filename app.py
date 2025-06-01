@@ -95,14 +95,18 @@ def categorize_news(news_item):
         for keyword in category_info['keywords']:
             if keyword in combined_text:
                 assigned_category = category_info['name']
+                logger.debug(f"Categorized '{news_item.get('title', '')[:30]}...' as '{assigned_category}' due to keyword '{keyword}'")
                 return assigned_category
     
+    logger.debug(f"Categorized '{news_item.get('title', '')[:30]}...' as 'Others' (no specific keywords found).")
     return assigned_category
 
 def fetch_news_from_redis():
     """Redis에서 모든 뉴스 항목을 가져와 정렬하고, Redis의 category 정보가 있으면 우선 사용"""
     news_pattern = re.compile(r'^news-(\d{8})-(\d{3})$')
     keys = [key for key in redis_client.scan_iter('news-*') if news_pattern.match(key)]
+    
+    logger.info(f"fetch_news_from_redis: Found {len(keys)} keys matching 'news-*' pattern.")
     
     pipe = redis_client.pipeline()
     for key in keys:
@@ -123,9 +127,23 @@ def fetch_news_from_redis():
                     news_data['category'] = categorize_news(news_data) 
                 
                 news_list.append(news_data)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON Decode Error for key {key}: {e} - Value: {value[:100]}...") # 에러 발생 시 값의 일부 로깅
             except Exception as e:
-                logger.warning(f"Invalid JSON in Redis for key {key}: {e}")
+                logger.error(f"Other Error processing key {key}: {e} - Value: {value[:100]}...")
+        else:
+            logger.warning(f"fetch_news_from_redis: Value for key {key} was empty.")
     
+    # ------------------ 디버깅을 위한 로깅 추가 ------------------
+    if not news_list:
+        logger.info("fetch_news_from_redis: No news items successfully parsed from Redis.")
+    else:
+        logger.info(f"fetch_news_from_redis: Successfully fetched and parsed {len(news_list)} news items.")
+        # 첫 3개 뉴스 항목의 제목, 출처, 카테고리만 로깅
+        for i, news in enumerate(news_list[:3]):
+            logger.info(f"fetch_news_from_redis: Sample News {i+1}: Title='{news.get('title', 'N/A')[:50]}...', Source='{news.get('source', 'N/A')}', Category='{news.get('category', 'N/A')}'")
+    # -------------------------------------------------------------
+
     def parse_date(item):
         try:
             dt = parser.parse(item.get('published', ''))
@@ -145,22 +163,34 @@ def index():
     """메인 페이지 라우트"""
     news_items = fetch_news_from_redis()
 
+    # ------------------ 디버깅을 위한 로깅 추가 ------------------
+    if not news_items:
+        logger.info("index route: No news items available to display on the main page.")
+    else:
+        logger.info(f"index route: Preparing to display {len(news_items)} news items on the main page.")
+    # -------------------------------------------------------------
+
     categorized_news = {category_id: [] for category_id in CATEGORIES.keys()}
     
     for news in news_items:
-        # CATEGORIES 딕셔너리의 실제 카테고리 이름과 일치하는지 확인
         found_category = False
+        # news.get('category') 값을 기반으로 categorized_news에 분류
+        # 이전에 categorize_news 함수에서 이미 category 값이 설정되었어야 함
+        news_category_name = news.get('category', CATEGORIES['others']['name']) 
+        
         for category_id, category_info in CATEGORIES.items():
-            if news.get('category') == category_info['name']:
+            if news_category_name == category_info['name']:
                 categorized_news[category_id].append(news)
                 found_category = True
                 break 
-        # 만약 news.get('category')가 CATEGORIES에 정의되지 않은 카테고리라면 'Others'에 추가
         if not found_category:
+            # CATEGORIES 딕셔너리에 없는 카테고리 이름이라면 'Others'로 분류
             categorized_news['others'].append(news) 
     
-    for cat_id, news_list in categorized_news.items():
-        logger.info(f"Category '{CATEGORIES[cat_id]['name']}': {len(news_list)} news items")
+    # ------------------ 디버깅을 위한 로깅 추가 ------------------
+    for cat_id, news_list_in_cat in categorized_news.items():
+        logger.info(f"index route: Category '{CATEGORIES[cat_id]['name']}' has {len(news_list_in_cat)} news items.")
+    # -------------------------------------------------------------
 
     return render_template('index.html',
                          categorized_news=categorized_news,
@@ -201,6 +231,17 @@ def get_trends():
             except Exception as e:
                 logger.warning(f"Error parsing date for news item {item.get('title', 'N/A')}: {e}")
                 continue
+        
+        logger.info(f"get_trends: Filtered down to {len(recent_news)} recent news items for period '{period}'.")
+        if not recent_news:
+            # 트렌드 계산을 위한 데이터가 없으면 빈 리스트 반환
+            return jsonify({
+                'top_keywords': [],
+                'source_distribution': [],
+                'category_distribution': [],
+                'country_distribution': [],
+                'sample_news': []
+            })
                 
         # --- 실제 트렌드 데이터 계산 로직 --- (★★하드코딩 제거 완료★★)
         
@@ -241,13 +282,13 @@ def get_trends():
             if cat_name in category_counts_dict: 
                 category_counts_dict[cat_name] += 1
             else: 
-                # Redis의 category 값이 CATEGORIES에 정의되지 않은 경우 'Others'로 분류
+                # CATEGORIES에 정의되지 않은 카테고리 이름이라면 'Others'로 분류
                 category_counts_dict[CATEGORIES['others']['name']] += 1
 
         category_distribution = [{'category': cat, 'count': count} for cat, count in category_counts_dict.items()]
         category_distribution.sort(key=lambda x: x['count'], reverse=True) 
         
-        logger.info(f"Calculated category distribution (including zeros): {category_distribution}")
+        logger.info(f"get_trends: Calculated category distribution: {category_distribution}")
 
         # 4. 국가 분포 계산
         country_mentions = Counter()
@@ -294,4 +335,6 @@ def trends_page():
     return render_template('trends.html')
 
 if __name__ == '__main__':
+    # 디버그 로그 레벨을 INFO에서 DEBUG로 변경하면 categorize_news 내부 로그도 볼 수 있습니다.
+    # logging.basicConfig(level=logging.DEBUG) 
     app.run(debug=True, port=5000)
