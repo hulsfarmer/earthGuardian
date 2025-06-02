@@ -58,62 +58,65 @@
   <main class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Reports</h1>
 
-    <!-- Daily Reports List -->
-    <section class="mb-8">
-      <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
-      {% if daily_dates %}
-      <ul class="list-disc list-inside space-y-1">
-        {% for d in daily_dates %}
-        <li>
-          <a href="{{ url_for('reports.daily_report', date=d) }}"
-             class="text-blue-600 hover:underline">
-            {{ d }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-gray-600">No daily reports available.</p>
-      {% endif %}
-    </section>
+    <!-- 3열 그리드: 모바일에서는 1열, 스크린이 넓어지면 3열 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Daily Reports -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
+        {% if daily_dates %}
+        <ul class="list-disc list-inside space-y-2">
+          {% for d in daily_dates %}
+          <li>
+            <a href="{{ url_for('reports.daily_report', date=d) }}"
+               class="text-blue-600 hover:underline">
+              {{ d }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-600">No daily reports available.</p>
+        {% endif %}
+      </div>
 
-    <!-- Weekly Reports List -->
-    <section class="mb-8">
-      <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
-      {% if weekly_dates %}
-      <ul class="list-disc list-inside space-y-1">
-        {% for w in weekly_dates %}
-        <li>
-          <a href="{{ url_for('reports.weekly_report', date=w) }}"
-             class="text-blue-600 hover:underline">
-            {{ w }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-gray-600">No weekly reports available.</p>
-      {% endif %}
-    </section>
+      <!-- Weekly Reports -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
+        {% if weekly_dates %}
+        <ul class="list-disc list-inside space-y-2">
+          {% for w in weekly_dates %}
+          <li>
+            <a href="{{ url_for('reports.weekly_report', date=w) }}"
+               class="text-blue-600 hover:underline">
+              {{ w }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-600">No weekly reports available.</p>
+        {% endif %}
+      </div>
 
-    <!-- Monthly Reports List -->
-    <section class="mb-8">
-      <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
-      {% if monthly_dates %}
-      <ul class="list-disc list-inside space-y-1">
-        {% for m in monthly_dates %}
-        <li>
-          <a href="{{ url_for('reports.monthly_report', date=m) }}"
-             class="text-blue-600 hover:underline">
-            {{ m }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-gray-600">No monthly reports available.</p>
-      {% endif %}
-    </section>
+      <!-- Monthly Reports -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
+        {% if monthly_dates %}
+        <ul class="list-disc list-inside space-y-2">
+          {% for m in monthly_dates %}
+          <li>
+            <a href="{{ url_for('reports.monthly_report', date=m) }}"
+               class="text-blue-600 hover:underline">
+              {{ m }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-600">No monthly reports available.</p>
+        {% endif %}
+      </div>
+    </div>
   </main>
 
   <footer class="bg-gray-800 text-white py-6 mt-12 text-sm sm:text-base">
