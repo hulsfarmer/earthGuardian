@@ -495,8 +495,6 @@ def monthly_report():
                            date_str=date_str,
                            report=raw_report)
 
-}
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
