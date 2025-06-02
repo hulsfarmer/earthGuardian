@@ -58,63 +58,105 @@
   <main class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Reports</h1>
 
-    <!-- 3열 그리드: 모바일에서는 1열, 스크린이 넓어지면 3열 -->
+    <!-- 3열 레이아웃: 모바일 1열, sm 2열, lg 3열 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Daily Reports -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Daily Reports 섹션 -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
-        {% if daily_dates %}
-        <ul class="list-disc list-inside space-y-2">
-          {% for d in daily_dates %}
-          <li>
-            <a href="{{ url_for('reports.daily_report', date=d) }}"
-               class="text-blue-600 hover:underline">
-              {{ d }}
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-gray-600">No daily reports available.</p>
-        {% endif %}
+        <!-- 리스트 상자 -->
+        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+          {% if daily_dates %}
+          <ul class="list-disc list-inside space-y-1">
+            {% for d in daily_dates %}
+            <li>
+              <a href="#"
+                 class="daily-link text-blue-600 hover:underline"
+                 data-date="{{ d }}">
+                {{ d }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-gray-600">No daily reports available.</p>
+          {% endif %}
+        </div>
+        <!-- 최신/선택된 리포트 내용 -->
+        <div id="daily-content" class="flex-1 overflow-y-auto">
+          {% if daily_latest_report %}
+          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
+            {{ daily_latest_report|safe }}
+          </div>
+          {% else %}
+          <p class="text-gray-500">Latest daily report not found.</p>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Weekly Reports -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Weekly Reports 섹션 -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
-        {% if weekly_dates %}
-        <ul class="list-disc list-inside space-y-2">
-          {% for w in weekly_dates %}
-          <li>
-            <a href="{{ url_for('reports.weekly_report', date=w) }}"
-               class="text-blue-600 hover:underline">
-              {{ w }}
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-gray-600">No weekly reports available.</p>
-        {% endif %}
+        <!-- 리스트 상자 -->
+        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+          {% if weekly_dates %}
+          <ul class="list-disc list-inside space-y-1">
+            {% for w in weekly_dates %}
+            <li>
+              <a href="#"
+                 class="weekly-link text-blue-600 hover:underline"
+                 data-date="{{ w }}">
+                {{ w }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-gray-600">No weekly reports available.</p>
+          {% endif %}
+        </div>
+        <!-- 최신/선택된 리포트 내용 -->
+        <div id="weekly-content" class="flex-1 overflow-y-auto">
+          {% if weekly_latest_report %}
+          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
+            {{ weekly_latest_report|safe }}
+          </div>
+          {% else %}
+          <p class="text-gray-500">Latest weekly report not found.</p>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Monthly Reports -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Monthly Reports 섹션 -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
-        {% if monthly_dates %}
-        <ul class="list-disc list-inside space-y-2">
-          {% for m in monthly_dates %}
-          <li>
-            <a href="{{ url_for('reports.monthly_report', date=m) }}"
-               class="text-blue-600 hover:underline">
-              {{ m }}
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <p class="text-gray-600">No monthly reports available.</p>
-        {% endif %}
+        <!-- 리스트 상자 -->
+        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+          {% if monthly_dates %}
+          <ul class="list-disc list-inside space-y-1">
+            {% for m in monthly_dates %}
+            <li>
+              <a href="#"
+                 class="monthly-link text-blue-600 hover:underline"
+                 data-date="{{ m }}">
+                {{ m }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-gray-600">No monthly reports available.</p>
+          {% endif %}
+        </div>
+        <!-- 최신/선택된 리포트 내용 -->
+        <div id="monthly-content" class="flex-1 overflow-y-auto">
+          {% if monthly_latest_report %}
+          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
+            {{ monthly_latest_report|safe }}
+          </div>
+          {% else %}
+          <p class="text-gray-500">Latest monthly report not found.</p>
+          {% endif %}
+        </div>
       </div>
     </div>
   </main>
@@ -124,5 +166,55 @@
       <p>© 2024 Earth Guardian. All rights reserved.</p>
     </div>
   </footer>
+
+  <!-- AJAX 스크립트: 클릭 시 해당 리포트를 가져와 화면에 표시 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Daily 링크들
+      document.querySelectorAll('.daily-link').forEach(a => {
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          const date = this.dataset.date;
+          fetchReport('daily', date, 'daily-content');
+        });
+      });
+      // Weekly 링크들
+      document.querySelectorAll('.weekly-link').forEach(a => {
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          const date = this.dataset.date;
+          fetchReport('weekly', date, 'weekly-content');
+        });
+      });
+      // Monthly 링크들
+      document.querySelectorAll('.monthly-link').forEach(a => {
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          const date = this.dataset.date;
+          fetchReport('monthly', date, 'monthly-content');
+        });
+      });
+    });
+
+    /**
+     * reportType: 'daily' | 'weekly' | 'monthly'
+     * date: 'YYYY-MM-DD'
+     * containerId: 업데이트할 <div>의 ID (예: 'daily-content')
+     */
+    function fetchReport(reportType, date, containerId) {
+      const url = `/reports/api/${reportType}?date=${date}`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById(containerId);
+          if (container) {
+            container.innerHTML = data.content;
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching report:', err);
+        });
+    }
+  </script>
 </body>
 </html>
