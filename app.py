@@ -429,6 +429,22 @@ def trends_page():
 def ads_txt():
     return send_from_directory('.', 'ads.txt')  # 루트 디렉토리에서 ads.txt 반환
 
+@app.route('/privacy_policy.html')
+def privacy():
+    return render_template('privacy_policy.html')
+
+@app.route('/terms_of_service.html')
+def terms():
+    return render_template('terms_of_service.html')
+
+@app.route('/contact_us.html')
+def contact():
+    return render_template('contact_us.html')
+
+@app.route('/about_us.html')
+def about():
+    return render_template('about_us.html')
+
 # report.py에서 정의한 Blueprint를 가져와서 등록
 from report import reports_bp
 app.register_blueprint(reports_bp)
