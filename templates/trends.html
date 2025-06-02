@@ -283,7 +283,7 @@
                 }
 
                 newsListElement.innerHTML = newsItems.map(news => `
-                    <div class="news-item" onclick="window.open('${news.link || '#'}', '_blank')">
+                   <div class="news-item" onclick="location.href='${news.link || '#'}'">
                         <h4 class="font-semibold text-gray-800 hover:text-green-600 transition-colors text-sm md:text-base">${news.title || 'No Title'}</h4>
                     </div>
                 `).join('');
