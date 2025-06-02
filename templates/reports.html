@@ -18,6 +18,11 @@
       .text-3xl { font-size: 1.25rem; }
       .text-xl { font-size: 1rem; }
     }
+    /* 콘텐츠 영역에 스크롤바를 주고 싶으면 max-height를 조정하세요 */
+    #report-content {
+      max-height: 500px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -59,12 +64,11 @@
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Reports</h1>
 
     <!-- 3열 레이아웃: 모바일 1열, sm 2열, lg 3열 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Daily Reports 섹션 -->
-      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Daily Reports 리스트 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
-        <!-- 리스트 상자 -->
-        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
           {% if daily_dates %}
           <ul class="list-disc list-inside space-y-1">
             {% for d in daily_dates %}
@@ -81,23 +85,12 @@
           <p class="text-gray-600">No daily reports available.</p>
           {% endif %}
         </div>
-        <!-- 최신/선택된 리포트 내용 -->
-        <div id="daily-content" class="flex-1 overflow-y-auto">
-          {% if daily_latest_report %}
-          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
-            {{ daily_latest_report|safe }}
-          </div>
-          {% else %}
-          <p class="text-gray-500">Latest daily report not found.</p>
-          {% endif %}
-        </div>
       </div>
 
-      <!-- Weekly Reports 섹션 -->
-      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+      <!-- Weekly Reports 리스트 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
-        <!-- 리스트 상자 -->
-        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
           {% if weekly_dates %}
           <ul class="list-disc list-inside space-y-1">
             {% for w in weekly_dates %}
@@ -114,23 +107,12 @@
           <p class="text-gray-600">No weekly reports available.</p>
           {% endif %}
         </div>
-        <!-- 최신/선택된 리포트 내용 -->
-        <div id="weekly-content" class="flex-1 overflow-y-auto">
-          {% if weekly_latest_report %}
-          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
-            {{ weekly_latest_report|safe }}
-          </div>
-          {% else %}
-          <p class="text-gray-500">Latest weekly report not found.</p>
-          {% endif %}
-        </div>
       </div>
 
-      <!-- Monthly Reports 섹션 -->
-      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+      <!-- Monthly Reports 리스트 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
-        <!-- 리스트 상자 -->
-        <div class="border border-gray-300 rounded-md p-4 mb-4 overflow-y-auto" style="max-height: 200px;">
+        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
           {% if monthly_dates %}
           <ul class="list-disc list-inside space-y-1">
             {% for m in monthly_dates %}
@@ -147,17 +129,16 @@
           <p class="text-gray-600">No monthly reports available.</p>
           {% endif %}
         </div>
-        <!-- 최신/선택된 리포트 내용 -->
-        <div id="monthly-content" class="flex-1 overflow-y-auto">
-          {% if monthly_latest_report %}
-          <div class="text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
-            {{ monthly_latest_report|safe }}
-          </div>
-          {% else %}
-          <p class="text-gray-500">Latest monthly report not found.</p>
-          {% endif %}
-        </div>
       </div>
+    </div>
+
+    <!-- 단일 콘텐츠 영역: 클릭한 리포트 내용 또는 최신 일간 리포트 표시 -->
+    <div id="report-content" class="bg-white rounded-lg shadow-md p-6 text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
+      {% if daily_latest_report %}
+        {{ daily_latest_report|safe }}
+      {% else %}
+        <p class="text-gray-500">Select a report from above to view its content.</p>
+      {% endif %}
     </div>
   </main>
 
@@ -167,7 +148,7 @@
     </div>
   </footer>
 
-  <!-- AJAX 스크립트: 클릭 시 해당 리포트를 가져와 화면에 표시 -->
+  <!-- AJAX 스크립트: 리스트 클릭 시 단일 콘텐츠 영역 업데이트 -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Daily 링크들
@@ -175,7 +156,7 @@
         a.addEventListener('click', function(e) {
           e.preventDefault();
           const date = this.dataset.date;
-          fetchReport('daily', date, 'daily-content');
+          fetchReport('daily', date);
         });
       });
       // Weekly 링크들
@@ -183,7 +164,7 @@
         a.addEventListener('click', function(e) {
           e.preventDefault();
           const date = this.dataset.date;
-          fetchReport('weekly', date, 'weekly-content');
+          fetchReport('weekly', date);
         });
       });
       // Monthly 링크들
@@ -191,7 +172,7 @@
         a.addEventListener('click', function(e) {
           e.preventDefault();
           const date = this.dataset.date;
-          fetchReport('monthly', date, 'monthly-content');
+          fetchReport('monthly', date);
         });
       });
     });
@@ -199,14 +180,14 @@
     /**
      * reportType: 'daily' | 'weekly' | 'monthly'
      * date: 'YYYY-MM-DD'
-     * containerId: 업데이트할 <div>의 ID (예: 'daily-content')
+     * 단일 콘텐츠 영역 '#report-content'를 업데이트
      */
-    function fetchReport(reportType, date, containerId) {
+    function fetchReport(reportType, date) {
       const url = `/reports/api/${reportType}?date=${date}`;
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          const container = document.getElementById(containerId);
+          const container = document.getElementById('report-content');
           if (container) {
             container.innerHTML = data.content;
           }
