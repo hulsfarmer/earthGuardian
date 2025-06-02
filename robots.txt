@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://earth-guardian.com/sitemap.xml
