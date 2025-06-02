@@ -165,46 +165,42 @@
                     <i class="fas fa-chevron-down expand-icon" id="icon-{{ category_id }}"></i>
                 </button>
             </div>
-            {% set filtered = [] %}
-            {% for news in categorized_news[category_id] %}
-                {% if (not current_category or category_id == current_category) 
-                      and (not current_source or news.source == current_source) %}
-                    {% do filtered.append(news) %}
-                {% endif %}
-            {% endfor %}
-
-            {% if filtered %}
-                <div class="news-grid collapsed" id="grid-{{ category_id }}">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {% for news in filtered %}
-                        <article class="news-card bg-white rounded-lg shadow-md overflow-hidden {% if loop.index > 3 %}hidden{% endif %}"
-                                 data-index="{{ loop.index }}">
-                            {% if news.image_url %}
-                            <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full h-40 md:h-48 object-cover">
-                            {% endif %}
-                            <div class="p-4 md:p-6">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-lg md:text-xl font-semibold">
-                                        <a href="{{ news.link }}" target="_blank" class="text-green-600 hover:text-green-800">
-                                            {{ news.title }}
-                                        </a>
-                                    </h3>
-                                    <span class="text-xs md:text-sm text-gray-500 ml-2">{{ news.source }}</span>
+            {% set visible_index = 0 %}
+            <div class="news-grid collapsed" id="grid-{{ category_id }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {% for news in categorized_news[category_id] %}
+                        {% if (not current_category or category_id == current_category) 
+                              and (not current_source or news.source == current_source) %}
+                            {% set visible_index = visible_index + 1 %}
+                            <article class="news-card bg-white rounded-lg shadow-md overflow-hidden {% if visible_index > 3 %}hidden{% endif %}"
+                                     data-index="{{ visible_index }}">
+                                {% if news.image_url %}
+                                <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full h-40 md:h-48 object-cover">
+                                {% endif %}
+                                <div class="p-4 md:p-6">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="text-lg md:text-xl font-semibold">
+                                            <a href="{{ news.link }}" target="_blank" class="text-green-600 hover:text-green-800">
+                                                {{ news.title }}
+                                            </a>
+                                        </h3>
+                                        <span class="text-xs md:text-sm text-gray-500 ml-2">{{ news.source }}</span>
+                                    </div>
+                                    <p class="text-xs md:text-sm text-gray-600 mb-3">{{ news.published }}</p>
+                                    <p class="text-sm md:text-base text-gray-700">{{ (news.summary | default('No summary available'))[:150] }}...</p>
+                                    <a href="{{ news.link }}" target="_blank" 
+                                       class="inline-block mt-3 text-green-600 hover:text-green-800 font-semibold text-sm md:text-base">
+                                        Read More →
+                                    </a>
                                 </div>
-                                <p class="text-xs md:text-sm text-gray-600 mb-3">{{ news.published }}</p>
-                                <p class="text-sm md:text-base text-gray-700">{{ (news.summary | default('No summary available'))[:150] }}...</p>
-                                <a href="{{ news.link }}" target="_blank" 
-                                   class="inline-block mt-3 text-green-600 hover:text-green-800 font-semibold text-sm md:text-base">
-                                    Read More →
-                                </a>
-                            </div>
-                        </article>
-                        {% endfor %}
-                    </div>
+                            </article>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-            {% else %}
+            </div>
+            {% if visible_index == 0 %}
                 <div class="text-center py-6 md:py-8 bg-white rounded-lg shadow-md">
-                    <p class="text-gray-600">No news in this category and filter selection.</p>
+                    <p class="text-gray-600">No news in this category with the selected filters.</p>
                 </div>
             {% endif %}
         </section>
