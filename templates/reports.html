@@ -118,15 +118,12 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
         <select id="daily-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
+          <!-- “Select…” placeholder -->
+          <option value="">Select a daily report</option>
           {% if daily_dates %}
             {% for d in daily_dates %}
-              <option value="{{ d }}"
-                {% if loop.first %}selected{% endif %}>
-                {{ d }}
-              </option>
+              <option value="{{ d }}">{{ d }}</option>
             {% endfor %}
-          {% else %}
-            <option disabled>No daily reports</option>
           {% endif %}
         </select>
       </div>
@@ -136,15 +133,12 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
         <select id="weekly-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
+          <!-- “Select…” placeholder -->
+          <option value="">Select a weekly report</option>
           {% if weekly_dates %}
             {% for w in weekly_dates %}
-              <option value="{{ w }}"
-                {% if loop.first %}selected{% endif %}>
-                {{ w }}
-              </option>
+              <option value="{{ w }}">{{ w }}</option>
             {% endfor %}
-          {% else %}
-            <option disabled>No weekly reports</option>
           {% endif %}
         </select>
       </div>
@@ -154,15 +148,12 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
         <select id="monthly-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
+          <!-- “Select…” placeholder -->
+          <option value="">Select a monthly report</option>
           {% if monthly_dates %}
             {% for m in monthly_dates %}
-              <option value="{{ m }}"
-                {% if loop.first %}selected{% endif %}>
-                {{ m }}
-              </option>
+              <option value="{{ m }}">{{ m }}</option>
             {% endfor %}
-          {% else %}
-            <option disabled>No monthly reports</option>
           {% endif %}
         </select>
       </div>
@@ -172,11 +163,9 @@
     <div id="report-content"
          class="bg-white rounded-lg shadow-md p-6 text-gray-700"
          style="line-height: 1.8; font-size: 1.05rem;">
-      {% if daily_latest_report %}
-        {{ daily_latest_report|safe }}
-      {% else %}
-        <p class="text-gray-500">Select a report from above to view its content.</p>
-      {% endif %}
+      <p class="text-gray-500">
+        Select a report above to view its content.
+      </p>
     </div>
   </main>
 
@@ -202,7 +191,7 @@
       if (dailySelect) {
         dailySelect.addEventListener('change', function() {
           const date = this.value;
-          fetchReport('daily', date);
+          if (date) fetchReport('daily', date);
         });
       }
 
@@ -211,7 +200,7 @@
       if (weeklySelect) {
         weeklySelect.addEventListener('change', function() {
           const date = this.value;
-          fetchReport('weekly', date);
+          if (date) fetchReport('weekly', date);
         });
       }
 
@@ -220,7 +209,7 @@
       if (monthlySelect) {
         monthlySelect.addEventListener('change', function() {
           const date = this.value;
-          fetchReport('monthly', date);
+          if (date) fetchReport('monthly', date);
         });
       }
     });
