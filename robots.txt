@@ -1,4 +1,3 @@
 User-agent: *
-Disallow:
-
+Disallow: /translation_cache.json
 Sitemap: https://earth-guardian.com/sitemap.xml
