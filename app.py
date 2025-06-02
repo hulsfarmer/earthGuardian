@@ -442,7 +442,6 @@ def reports_index():
                            daily_url=daily_url,
                            weekly_url=weekly_url,
                            monthly_url=monthly_url)
-}
 
 
 @app.route('/reports/daily')
@@ -495,6 +494,8 @@ def monthly_report():
                            report_type='monthly',
                            date_str=date_str,
                            report=raw_report)
+
+}
 
 
 if __name__ == '__main__':
