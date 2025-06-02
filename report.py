@@ -67,7 +67,7 @@ def reports_index():
     monthly_url = url_for('reports.monthly_report', date=date_str)
 
     return render_template(
-        'reports_index.html',
+        'reports.html',
         date_str=date_str,
         daily_url=daily_url,
         weekly_url=weekly_url,
