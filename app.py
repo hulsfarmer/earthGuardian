@@ -425,6 +425,9 @@ def trends_page():
     logger.info("trends_page: Rendering trends.html.")
     return render_template('trends.html')
 
+# report.py에서 정의한 Blueprint를 가져와서 등록
+from report import reports_bp
+app.register_blueprint(reports_bp)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
