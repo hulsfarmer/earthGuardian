@@ -445,6 +445,15 @@ def contact():
 def about():
     return render_template('about_us.html')
 
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory('.',  'sitemap.xml')
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory('.',  'robots.txt')
+
+
 # report.py에서 정의한 Blueprint를 가져와서 등록
 from report import reports_bp
 app.register_blueprint(reports_bp)
