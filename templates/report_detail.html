@@ -1,81 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earth Guardian - Report Detail</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-      @media (max-width: 640px) {
-        h1.text-4xl { font-size: 1.5rem; }
-        .container { padding-left: 0.5rem; padding-right: 0.5rem; }
-        .py-8 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-        .p-8 { padding: 1.25rem; }
-        .text-3xl { font-size: 1.25rem; }
-        .text-xl { font-size: 1rem; }
-      }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Earth Guardian - {{ report_type|capitalize }} Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    @media (max-width: 640px) {
+      .container { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .text-3xl { font-size: 1.25rem; }
+      .text-xl { font-size: 1rem; }
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
-    <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
-            <a href="/" class="block">
-                <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
-                <p class="mt-2 text-sm sm:text-base">Environmental News</p>
-            </a>
-            <button id="mobile-menu-toggle" class="sm:hidden px-2 py-1 ml-auto text-white focus:outline-none">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
-            <nav id="main-nav" class="flex space-x-6 sm:flex hidden w-full sm:w-auto mt-4 sm:mt-0">
-                <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                    <i class="fas fa-newspaper mr-2"></i>
-                    News
-                </a>
-                <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
-                    <i class="fas fa-chart-line mr-2"></i>
-                    Trends
-                </a>
-                <a href="/reports" class="px-4 py-2 rounded-md bg-green-800 font-bold flex items-center">
-                    <i class="fas fa-file-alt mr-2"></i>
-                    Reports
-                </a>
-            </nav>
+  <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="/" class="block">
+        <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+        <p class="mt-2 text-sm sm:text-base">Environmental News</p>
+      </a>
+      <button id="mobile-menu-toggle" class="sm:hidden px-2 py-1 ml-auto text-white focus:outline-none">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+      <nav id="main-nav" class="flex space-x-6 sm:flex hidden w-full sm:w-auto mt-4 sm:mt-0">
+        <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+          <i class="fas fa-newspaper mr-2"></i>News
+        </a>
+        <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+          <i class="fas fa-chart-line mr-2"></i>Trends
+        </a>
+        <a href="/reports" class="px-4 py-2 rounded-md bg-green-800 font-bold flex items-center">
+          <i class="fas fa-file-alt mr-2"></i>Reports
+        </a>
+      </nav>
+      <script>
+        const menuBtn = document.getElementById('mobile-menu-toggle');
+        const nav = document.getElementById('main-nav');
+        if (menuBtn) {
+          menuBtn.addEventListener('click', () => {
+            nav.classList.toggle('hidden');
+          });
+        }
+      </script>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <a href="/reports?date={{ date_str }}" class="inline-block mb-6 text-green-700 hover:underline">
+      <i class="fas fa-arrow-left mr-2"></i>Back to reports
+    </a>
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">
+      {{ report_type|capitalize }} Report – {{ date_str }}
+    </h1>
+
+    {% if not report %}
+      <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+        <p>There is no report data available.</p>
+      </div>
+    {% else %}
+      <div class="bg-white rounded-lg shadow-md p-8 text-gray-700">
+        <!-- 줄바꿈이 <br>로 변환된 순수 텍스트를 safe로 출력 -->
+        <div style="line-height: 1.8; font-size: 1.05rem;">
+          {{ report|safe }}
         </div>
-        <script>
-          const menuBtn = document.getElementById('mobile-menu-toggle');
-          const nav = document.getElementById('main-nav');
-          if(menuBtn) {
-            menuBtn.addEventListener('click', () => {
-              nav.classList.toggle('hidden');
-            });
-          }
-        </script>
-    </header>
-    <main class="container mx-auto px-4 py-8">
-        <a href="/reports" class="inline-block mb-6 text-green-700 hover:underline"><i class="fas fa-arrow-left mr-2"></i>Back to reports </a>
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ report_type|capitalize }} REPORT - {{ date_str }}</h1>
-        {% if not report %}
-            <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                <p>There is no report data available.</p>
-            </div>
-        {% else %}
-            <div class="bg-white rounded-lg shadow-md p-8 text-gray-700">
-                <div class="markdown-body" style="line-height: 1.8; font-size: 1.05rem;">
-                  {{ report|safe }}
-                </div>
-                <style>
-                    .markdown-body p { margin-top: 1.2em; margin-bottom: 1.2em; }
-                    .markdown-body h2, .markdown-body h3, .markdown-body h4 { margin-top: 2em; margin-bottom: 1em; }
-                    .markdown-body ul, .markdown-body ol { margin-top: 1em; margin-bottom: 1em; }
-                </style>
-            </div>
-        {% endif %}
-    </main>
-    <footer class="bg-gray-800 text-white py-6 mt-12 text-sm sm:text-base">
-        <div class="container mx-auto px-4 text-center">
-            <p>© 2024 Earth Guardian. All rights reserved.</p>
-        </div>
-    </footer>
+      </div>
+    {% endif %}
+  </main>
+
+  <footer class="bg-gray-800 text-white py-6 mt-12 text-sm sm:text-base">
+    <div class="container mx-auto px-4 text-center">
+      <p>© 2024 Earth Guardian. All rights reserved.</p>
+    </div>
+  </footer>
 </body>
-</html> 
+</html>
