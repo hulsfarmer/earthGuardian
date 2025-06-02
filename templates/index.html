@@ -165,10 +165,18 @@
                     <i class="fas fa-chevron-down expand-icon" id="icon-{{ category_id }}"></i>
                 </button>
             </div>
-            {% if categorized_news[category_id] %}
+            {% set filtered = [] %}
+            {% for news in categorized_news[category_id] %}
+                {% if (not current_category or category_id == current_category) 
+                      and (not current_source or news.source == current_source) %}
+                    {% do filtered.append(news) %}
+                {% endif %}
+            {% endfor %}
+
+            {% if filtered %}
                 <div class="news-grid collapsed" id="grid-{{ category_id }}">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        {% for news in categorized_news[category_id] %}
+                        {% for news in filtered %}
                         <article class="news-card bg-white rounded-lg shadow-md overflow-hidden {% if loop.index > 3 %}hidden{% endif %}"
                                  data-index="{{ loop.index }}">
                             {% if news.image_url %}
@@ -196,7 +204,7 @@
                 </div>
             {% else %}
                 <div class="text-center py-6 md:py-8 bg-white rounded-lg shadow-md">
-                    <p class="text-gray-600">No news in this category.</p>
+                    <p class="text-gray-600">No news in this category and filter selection.</p>
                 </div>
             {% endif %}
         </section>
@@ -256,4 +264,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
