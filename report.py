@@ -4,7 +4,7 @@ import os
 import redis
 import pickle
 import datetime
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, url_for
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -14,7 +14,7 @@ def get_redis_client():
     return redis.StrictRedis.from_url(redis_url, decode_responses=True)
 
 
-def load_report_from_redis(period_key):
+def load_report_from_redis(key_name):
     """
     Redis에서 저장된 리포트를 읽어 옵니다.
     - pickle 직렬화된 경우: pickle.loads
@@ -22,10 +22,11 @@ def load_report_from_redis(period_key):
     - 그 외 단순 텍스트라면 줄바꿈을 <br>로 변환하여 반환
     """
     client = get_redis_client()
-    raw = client.get(f'flask_cache_periodic_report_{period_key}')
+    raw = client.get(key_name)
     if not raw:
         return None
 
+    # raw가 bytes 혹은 str 형태
     try:
         text = raw.decode() if isinstance(raw, bytes) else raw
     except Exception:
@@ -44,7 +45,7 @@ def load_report_from_redis(period_key):
     except Exception:
         pass
 
-    # 3) 단순 텍스트 → 줄바꿈을 <br>로 변환하여 반환
+    # 3) 단순 텍스트: 줄바꿈을 <br>로 바꾸어 반환
     return text.replace('\n', '<br>')
 
 
@@ -53,15 +54,13 @@ def reports_index():
     """
     /reports 경로
     - ?date=YYYY-MM-DD 파라미터를 읽어 사용
-    - 없으면 오늘(UTC) 날짜를 기본으로 사용
+    - 없으면 오늘(UTC) 날짜 기본 사용
     - 일간/주간/월간 리포트 URL을 생성하여 템플릿에 전달
     """
     date_str = request.args.get('date')
     if not date_str:
         date_str = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
-    # 각 리포트 타입별 URL 생성
-    from flask import url_for
     daily_url   = url_for('reports.daily_report',   date=date_str)
     weekly_url  = url_for('reports.weekly_report',  date=date_str)
     monthly_url = url_for('reports.monthly_report', date=date_str)
@@ -80,15 +79,19 @@ def daily_report():
     """
     /reports/daily 경로
     - ?date=YYYY-MM-DD 파라미터를 읽어 사용
-    - 없으면 오늘(UTC) 날짜를 기본으로 사용
-    - Redis에서 `daily-YYYY-MM-DD` 키로 리포트 조회
+    - 없으면 오늘(UTC) 날짜 기본 사용
+    - Redis에서 `dailyreport-YYYYMMDD` 키로 리포트 조회
     """
     date_str = request.args.get('date')
     if not date_str:
         date_str = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
-    period_key = f"daily-{date_str}"
-    raw_report = load_report_from_redis(period_key)
+    # Redis에 저장된 형식: 'dailyreport-YYYYMMDD'
+    # date_str은 'YYYY-MM-DD' 형식이므로, '-'를 제거해야 키와 일치함
+    key_date = date_str.replace('-', '')        # e.g. '20250601'
+    redis_key = f"dailyreport-{key_date}"       # e.g. 'dailyreport-20250601'
+
+    raw_report = load_report_from_redis(redis_key)
     if raw_report is None:
         return render_template(
             'report_detail.html',
@@ -110,15 +113,17 @@ def weekly_report():
     """
     /reports/weekly 경로
     - ?date=YYYY-MM-DD 파라미터를 읽어 사용
-    - 없으면 오늘(UTC) 날짜를 기본으로 사용
-    - Redis에서 `weekly-YYYY-MM-DD` 키로 리포트 조회
+    - 없으면 오늘(UTC) 날짜 기본 사용
+    - Redis에서 `weeklyreport-YYYYMMDD` 키로 리포트 조회
     """
     date_str = request.args.get('date')
     if not date_str:
         date_str = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
-    period_key = f"weekly-{date_str}"
-    raw_report = load_report_from_redis(period_key)
+    key_date = date_str.replace('-', '')        # e.g. '20250601'
+    redis_key = f"weeklyreport-{key_date}"      # e.g. 'weeklyreport-20250601'
+
+    raw_report = load_report_from_redis(redis_key)
     if raw_report is None:
         return render_template(
             'report_detail.html',
@@ -140,15 +145,17 @@ def monthly_report():
     """
     /reports/monthly 경로
     - ?date=YYYY-MM-DD 파라미터를 읽어 사용
-    - 없으면 오늘(UTC) 날짜를 기본으로 사용
-    - Redis에서 `monthly-YYYY-MM-DD` 키로 리포트 조회
+    - 없으면 오늘(UTC) 날짜 기본 사용
+    - Redis에서 `monthlyreport-YYYYMMDD` 키로 리포트 조회
     """
     date_str = request.args.get('date')
     if not date_str:
         date_str = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
-    period_key = f"monthly-{date_str}"
-    raw_report = load_report_from_redis(period_key)
+    key_date = date_str.replace('-', '')        # e.g. '20250601'
+    redis_key = f"monthlyreport-{key_date}"     # e.g. 'monthlyreport-20250601'
+
+    raw_report = load_report_from_redis(redis_key)
     if raw_report is None:
         return render_template(
             'report_detail.html',
