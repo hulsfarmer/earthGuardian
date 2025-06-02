@@ -428,16 +428,11 @@ def trends_page():
 # report 추가
 @app.route('/reports')
 def reports_index():
-    """
-    /reports 경로에서, 사용 가능한 리포트(일간·주간·월간 날짜별 링크 목록)를 보여줍니다.
-    querystring으로 date=YYYY-MM-DD 파라미터를 받으며, 주어지지 않으면 오늘(UTC) 날짜를 사용합니다.
-    """
     date_str = request.args.get('date')
     if not date_str:
-        # date 파라미터가 없으면 오늘(UTC) 날짜를 기본으로
-        date_str = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+        # 올바른 참조: datetime.utcnow()
+        date_str = datetime.utcnow().strftime('%Y-%m-%d')
 
-    # 각 리포트 타입별로 이동할 URL 생성
     daily_url   = url_for('daily_report',   date=date_str)
     weekly_url  = url_for('weekly_report',  date=date_str)
     monthly_url = url_for('monthly_report', date=date_str)
@@ -447,6 +442,8 @@ def reports_index():
                            daily_url=daily_url,
                            weekly_url=weekly_url,
                            monthly_url=monthly_url)
+}
+
 
 @app.route('/reports/daily')
 def daily_report():
