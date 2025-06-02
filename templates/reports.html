@@ -118,12 +118,16 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
         <select id="daily-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
-          <!-- “Select…” placeholder -->
-          <option value="">Select a daily report</option>
+          <option value="">-- Select a Daily Report --</option>
           {% if daily_dates %}
             {% for d in daily_dates %}
-              <option value="{{ d }}">{{ d }}</option>
+              <option value="{{ d }}"
+                {% if loop.first %}selected{% endif %}>
+                {{ d }}
+              </option>
             {% endfor %}
+          {% else %}
+            <option disabled>No daily reports</option>
           {% endif %}
         </select>
       </div>
@@ -133,12 +137,16 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
         <select id="weekly-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
-          <!-- “Select…” placeholder -->
-          <option value="">Select a weekly report</option>
+          <option value="">-- Select a Weekly Report --</option>
           {% if weekly_dates %}
             {% for w in weekly_dates %}
-              <option value="{{ w }}">{{ w }}</option>
+              <option value="{{ w }}"
+                {% if loop.first %}selected{% endif %}>
+                {{ w }}
+              </option>
             {% endfor %}
+          {% else %}
+            <option disabled>No weekly reports</option>
           {% endif %}
         </select>
       </div>
@@ -148,12 +156,16 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
         <select id="monthly-select"
                 class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
-          <!-- “Select…” placeholder -->
-          <option value="">Select a monthly report</option>
+          <option value="">-- Select a Monthly Report --</option>
           {% if monthly_dates %}
             {% for m in monthly_dates %}
-              <option value="{{ m }}">{{ m }}</option>
+              <option value="{{ m }}"
+                {% if loop.first %}selected{% endif %}>
+                {{ m }}
+              </option>
             {% endfor %}
+          {% else %}
+            <option disabled>No monthly reports</option>
           {% endif %}
         </select>
       </div>
@@ -163,9 +175,11 @@
     <div id="report-content"
          class="bg-white rounded-lg shadow-md p-6 text-gray-700"
          style="line-height: 1.8; font-size: 1.05rem;">
-      <p class="text-gray-500">
-        Select a report above to view its content.
-      </p>
+      {% if daily_latest_report %}
+        {{ daily_latest_report|safe }}
+      {% else %}
+        <p class="text-gray-500">Select a report from above to view its content.</p>
+      {% endif %}
     </div>
   </main>
 
@@ -186,30 +200,49 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // Daily select change
       const dailySelect = document.getElementById('daily-select');
+      const weeklySelect = document.getElementById('weekly-select');
+      const monthlySelect = document.getElementById('monthly-select');
+
       if (dailySelect) {
         dailySelect.addEventListener('change', function() {
+          // 일간 보고서를 선택할 때 주간/월간 초기화
+          if (weeklySelect) weeklySelect.value = "";
+          if (monthlySelect) monthlySelect.value = "";
           const date = this.value;
-          if (date) fetchReport('daily', date);
+          if (date) {
+            fetchReport('daily', date);
+          } else {
+            clearReportContent();
+          }
         });
       }
 
-      // Weekly select change
-      const weeklySelect = document.getElementById('weekly-select');
       if (weeklySelect) {
         weeklySelect.addEventListener('change', function() {
+          // 주간 보고서를 선택할 때 일간/월간 초기화
+          if (dailySelect) dailySelect.value = "";
+          if (monthlySelect) monthlySelect.value = "";
           const date = this.value;
-          if (date) fetchReport('weekly', date);
+          if (date) {
+            fetchReport('weekly', date);
+          } else {
+            clearReportContent();
+          }
         });
       }
 
-      // Monthly select change
-      const monthlySelect = document.getElementById('monthly-select');
       if (monthlySelect) {
         monthlySelect.addEventListener('change', function() {
+          // 월간 보고서를 선택할 때 일간/주간 초기화
+          if (dailySelect) dailySelect.value = "";
+          if (weeklySelect) weeklySelect.value = "";
           const date = this.value;
-          if (date) fetchReport('monthly', date);
+          if (date) {
+            fetchReport('monthly', date);
+          } else {
+            clearReportContent();
+          }
         });
       }
     });
@@ -232,6 +265,14 @@
         .catch(err => {
           console.error('Error fetching report:', err);
         });
+    }
+
+    // 선택이 없거나 빈 값으로 돌아왔을 때, report-content를 기본 안내문으로 복원
+    function clearReportContent() {
+      const container = document.getElementById('report-content');
+      if (container) {
+        container.innerHTML = '<p class="text-gray-500">Select a report from above to view its content.</p>';
+      }
     }
   </script>
 </body>
