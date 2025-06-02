@@ -18,10 +18,9 @@
       .text-3xl { font-size: 1.25rem; }
       .text-xl { font-size: 1rem; }
     }
-    /* 콘텐츠 영역에 스크롤바를 주고 싶으면 max-height를 조정하세요 */
+    /* #report-content에서 스크롤 제한 제거 → 자연스럽게 길이 증가 */
     #report-content {
-      max-height: 500px;
-      overflow-y: auto;
+      /* 이제 별도의 max-height/overflow 스타일이 없습니다 */
     }
   </style>
 </head>
@@ -65,137 +64,24 @@
 
     <!-- 3열 레이아웃: 모바일 1열, sm 2열, lg 3열 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Daily Reports 리스트 -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <!-- Daily Reports 섹션 -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
         <h2 class="text-2xl font-semibold text-green-600 mb-4">Daily Reports</h2>
-        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
+        <select id="daily-select"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base mb-4">
           {% if daily_dates %}
-          <ul class="list-disc list-inside space-y-1">
             {% for d in daily_dates %}
-            <li>
-              <a href="#"
-                 class="daily-link text-blue-600 hover:underline"
-                 data-date="{{ d }}">
+              <option value="{{ d }}"
+                {% if loop.first %}selected{% endif %}>
                 {{ d }}
-              </a>
-            </li>
+              </option>
             {% endfor %}
-          </ul>
           {% else %}
-          <p class="text-gray-600">No daily reports available.</p>
+            <option disabled>No daily reports</option>
           {% endif %}
-        </div>
+        </select>
       </div>
 
-      <!-- Weekly Reports 리스트 -->
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-semibold text-green-600 mb-4">Weekly Reports</h2>
-        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
-          {% if weekly_dates %}
-          <ul class="list-disc list-inside space-y-1">
-            {% for w in weekly_dates %}
-            <li>
-              <a href="#"
-                 class="weekly-link text-blue-600 hover:underline"
-                 data-date="{{ w }}">
-                {{ w }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="text-gray-600">No weekly reports available.</p>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Monthly Reports 리스트 -->
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-semibold text-green-600 mb-4">Monthly Reports</h2>
-        <div class="border border-gray-300 rounded-md p-4 overflow-y-auto" style="max-height: 200px;">
-          {% if monthly_dates %}
-          <ul class="list-disc list-inside space-y-1">
-            {% for m in monthly_dates %}
-            <li>
-              <a href="#"
-                 class="monthly-link text-blue-600 hover:underline"
-                 data-date="{{ m }}">
-                {{ m }}
-              </a>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="text-gray-600">No monthly reports available.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- 단일 콘텐츠 영역: 클릭한 리포트 내용 또는 최신 일간 리포트 표시 -->
-    <div id="report-content" class="bg-white rounded-lg shadow-md p-6 text-gray-700" style="line-height: 1.8; font-size: 1.05rem;">
-      {% if daily_latest_report %}
-        {{ daily_latest_report|safe }}
-      {% else %}
-        <p class="text-gray-500">Select a report from above to view its content.</p>
-      {% endif %}
-    </div>
-  </main>
-
-  <footer class="bg-gray-800 text-white py-6 mt-12 text-sm sm:text-base">
-    <div class="container mx-auto px-4 text-center">
-      <p>© 2024 Earth Guardian. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <!-- AJAX 스크립트: 리스트 클릭 시 단일 콘텐츠 영역 업데이트 -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Daily 링크들
-      document.querySelectorAll('.daily-link').forEach(a => {
-        a.addEventListener('click', function(e) {
-          e.preventDefault();
-          const date = this.dataset.date;
-          fetchReport('daily', date);
-        });
-      });
-      // Weekly 링크들
-      document.querySelectorAll('.weekly-link').forEach(a => {
-        a.addEventListener('click', function(e) {
-          e.preventDefault();
-          const date = this.dataset.date;
-          fetchReport('weekly', date);
-        });
-      });
-      // Monthly 링크들
-      document.querySelectorAll('.monthly-link').forEach(a => {
-        a.addEventListener('click', function(e) {
-          e.preventDefault();
-          const date = this.dataset.date;
-          fetchReport('monthly', date);
-        });
-      });
-    });
-
-    /**
-     * reportType: 'daily' | 'weekly' | 'monthly'
-     * date: 'YYYY-MM-DD'
-     * 단일 콘텐츠 영역 '#report-content'를 업데이트
-     */
-    function fetchReport(reportType, date) {
-      const url = `/reports/api/${reportType}?date=${date}`;
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          const container = document.getElementById('report-content');
-          if (container) {
-            container.innerHTML = data.content;
-          }
-        })
-        .catch(err => {
-          console.error('Error fetching report:', err);
-        });
-    }
-  </script>
-</body>
-</html>
+      <!-- Weekly Reports 섹션 -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+        <h2 class="
