@@ -419,6 +419,24 @@ def get_trends():
         logger.error(f"get_trends: Unhandled error generating trends: {e}", exc_info=True)
         return jsonify({'error': 'Failed to generate trends', 'details': str(e)}), 500
 
+@app.after_request
+def set_security_headers(response):
+    # 콘텐츠 유형 검사: 잘못된 MIME 타입 실행 방지
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # 클릭재킹 방지: iframe 삽입 차단
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    
+    # 브라우저 XSS 필터 활성화
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # Referrer 최소화 (선택)
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # 콘텐츠 보안 정책 (선택 강화)
+    # response.headers["Content-Security-Policy"] = "default-src 'self'; img-src * data:; script-src 'self'"
+
+    return response
 
 @app.route('/trends')
 def trends_page():
