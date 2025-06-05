@@ -35,75 +35,115 @@ CATEGORIES = {
     'climate_change': {
         'name': 'Climate Change',
         'keywords': [
-            'climate change', 'global warming', 'greenhouse gas',
-            'carbon emission', 'temperature rise', 'paris agreement',
-            'ipcc', 'cop', 'net zero', 'climate crisis',
-            'warming planet', 'carbon footprint', 'emission reduction'
+            'climate change', 'global warming', 'greenhouse gas', 'greenhouse gases',
+            'carbon emission', 'carbon emissions', 'co2', 'ch4', 'methane',
+            'temperature rise', 'net zero', 'paris agreement', 'ipcc',
+            'cop26', 'cop27', 'cop28', 'climate crisis', 'warming planet',
+            'carbon footprint', 'emission reduction', 'carbon offset',
+            'sea level rise', 'extreme weather', 'climate resilience',
+            'fossil fuel', 'fossil fuels', 'oil and gas', 'pipeline', 'pipelines',
+            'global heating', 'decarbonization', '1.5c', '2c', 'tipping point',
+            'carbon budget', 'permafrost', 'el niño', 'el nino',
+            'la niña', 'la nina', 'heatwave'
         ]
     },
+
     'biodiversity': {
         'name': 'Biodiversity',
         'keywords': [
-            'biodiversity', 'endangered species', 'wildlife',
-            'ecosystem', 'habitat loss', 'deforestation',
-            'conservation', 'extinction', 'protected areas',
-            'reforestation', 'species loss', 'natural habitats',
-            'forest destruction'
+            'biodiversity', 'endangered', 'endangered species', 'wildlife',
+            'ecosystem', 'habitat loss', 'deforestation', 'reforestation',
+            'conservation', 'extinction', 'protected areas', 'species loss',
+            'nature restoration', 'marine life', 'ocean biodiversity', 'pollinator',
+            'coral reef', 'habitat fragmentation', 'ecosystem services',
+            'rewilding', 'invasive species', 'poaching', 'wildlife trade',
+            'species reintroduction', 'biodiversity hotspot'
         ]
     },
+
     'renewable_energy': {
         'name': 'Renewable Energy',
         'keywords': [
-            'renewable energy', 'solar power', 'wind power',
-            'clean energy', 'green energy', 'hydropower',
-            'geothermal', 'biofuel', 'energy transition',
-            'sustainable energy', 'solar farms', 'wind turbines'
+            'renewable', 'renewables', 'solar', 'solar panel', 'solar farm',
+            'wind', 'wind turbine', 'wind farm', 'windfarm',
+            'hydro', 'hydropower', 'geothermal', 'biofuel', 'biomass',
+            'energy transition', 'sustainable energy', 'green energy',
+            'battery storage', 'ev', 'electric vehicle', 'ev charging',
+            'charging station', 'hydrogen', 'offshore wind', 'pv', 'microgrid',
+            'photovoltaic', 'photovoltaic cell', 'clean power',
+            'grid integration', 'transmission line', 'green hydrogen',
+            'fuel cell'
         ]
     },
+
     'sustainability': {
         'name': 'Sustainability',
         'keywords': [
-            'sustainability', 'sustainable', 'circular economy',
-            'green economy', 'esg', 'corporate social responsibility',
-            'sustainable development goals', 'eco-friendly',
-            'resource efficiency', 'recycling', 'waste management',
-            'green business'
+            'sustainability', 'sustainable', 'circular economy', 'green economy',
+            'esg', 'csr', 'corporate social responsibility',
+            'sustainable development goals', 'sdg', 'eco-friendly',
+            'resource efficiency', 'reuse', 'reduce', 'recycle', 'zero waste',
+            'waste management', 'green business', 'green building',
+            'low carbon', 'carbon neutral', 'green bond', 'sustainable finance',
+            'responsible sourcing', 'life cycle assessment', 'agriculture',
+            'farming', 'regenerative agriculture', 'organic farming',
+            'sustainable food', 'supply chain', 'fair trade',
+            'eco-tourism', 'green tourism', 'sustainable packaging',
+            'circular fashion'
         ]
     },
+
     'pollution': {
         'name': 'Pollution',
         'keywords': [
-            'pollution', 'air quality', 'water pollution',
-            'plastic waste', 'chemical pollution', 'microplastic',
+            'pollution', 'air quality', 'air pollution', 'water pollution',
+            'plastic waste', 'chemical pollution', 'microplastic', 'microplastics',
             'ocean pollution', 'smog', 'contaminants', 'toxic waste',
-            'environmental contamination'
+            'wastewater', 'industrial pollution', 'noise pollution',
+            'soil contamination', 'particulate matter', 'pm2.5', 'pm10',
+            'ozone', 'sulfur dioxide', 'pfas', 'forever chemicals',
+            'heavy metal', 'lead', 'mercury', 'arsenic', 'chemical spill',
+            'pesticide', 'herbicide', 'black carbon', 'soot',
+            'nox', 'nitrogen oxide', 'sewage', 'e-waste'
         ]
     },
+
     'environmental_policy': {
         'name': 'Environmental Policy',
         'keywords': [
             'environmental policy', 'climate policy',
-            'environmental regulation', 'environmental law',
-            'environmental tax', 'subsidy', 'international agreement',
-            'climate agreement', 'environmental standard',
-            'carbon pricing', 'green deal', 'government policy',
-            'legislation'
+            'environmental regulation', 'environmental regulations',
+            'environmental law', 'carbon pricing', 'carbon tax',
+            'emissions trading', 'cap and trade', 'green deal',
+            'government policy', 'legislation', 'policy initiative',
+            'environmental standard', 'regulation', 'regulations', 'directive',
+            'epa', 'eia', 'environmental impact assessment', 'kyoto protocol',
+            'farm bill', 'subsidy', 'subsidies', 'tax credit',
+            'appropriations', 'supreme court', 'climate finance',
+            'trade agreement', 'infrastructure bill'
         ]
     },
+
     'environmental_tech': {
         'name': 'Environmental Technology',
         'keywords': [
-            'environmental technology', 'green tech',
-            'carbon capture', 'environmental monitoring',
-            'waste treatment', 'smart environment', 'clean tech',
-            'environmental innovation', 'sustainable technology',
-            'eco-innovation', 'recycling technology', 'sensors',
-            'AI for environment'
+            'environmental technology', 'green tech', 'clean tech', 'cleantech',
+            'carbon capture', 'carbon capture technology', 'ccs',
+            'direct air capture', 'dacs', 'environmental monitoring',
+            'sensor', 'satellite', 'smart grid', 'smart city', 'waste treatment',
+            'water treatment', 'eco-innovation', 'recycling technology',
+            'waste-to-energy', 'bioremediation', 'ai', 'iot', 'drone',
+            'smart irrigation', 'energy storage', 'grid modernization',
+            'biotech', 'battery', 'solid-state battery', 'perovskite solar',
+            'biochar', 'negative emissions', 'synthetic biology',
+            'digital twin', 'blockchain energy', 'quantum sensing',
+            'drone mapping'
         ]
     },
+
     'others': {
         'name': 'Others',
-        'keywords': []  # 'Others' 카테고리는 특정 키워드 없음
+        'keywords': []  # no specific keywords
     }
 }
 
