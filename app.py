@@ -32,6 +32,25 @@ except Exception as e:
 
 # 카테고리 키워드 정의
 CATEGORIES = {
+
+     'sustainability': {
+        'name': 'Sustainability',
+        'keywords': [
+            'sustainability', 'sustainable', 'circular economy', 'green economy',
+            'esg', 'csr', 'corporate social responsibility',
+            'sustainable development goals', 'sdg', 'eco-friendly',
+            'resource efficiency', 'reuse', 'reduce', 'recycle', 'zero waste',
+            'waste management', 'green business', 'green building',
+            'low carbon', 'carbon neutral', 'green bond', 'sustainable finance',
+            'responsible sourcing', 'life cycle assessment', 'agriculture',
+            'farming', 'regenerative agriculture', 'organic farming',
+            'sustainable food', 'supply chain', 'fair trade',
+            'eco-tourism', 'green tourism', 'sustainable packaging',
+            'circular fashion'
+        ]
+    },
+
+    
     'climate_change': {
         'name': 'Climate Change',
         'keywords': [
@@ -73,23 +92,6 @@ CATEGORIES = {
             'photovoltaic', 'photovoltaic cell', 'clean power',
             'grid integration', 'transmission line', 'green hydrogen',
             'fuel cell'
-        ]
-    },
-
-    'sustainability': {
-        'name': 'Sustainability',
-        'keywords': [
-            'sustainability', 'sustainable', 'circular economy', 'green economy',
-            'esg', 'csr', 'corporate social responsibility',
-            'sustainable development goals', 'sdg', 'eco-friendly',
-            'resource efficiency', 'reuse', 'reduce', 'recycle', 'zero waste',
-            'waste management', 'green business', 'green building',
-            'low carbon', 'carbon neutral', 'green bond', 'sustainable finance',
-            'responsible sourcing', 'life cycle assessment', 'agriculture',
-            'farming', 'regenerative agriculture', 'organic farming',
-            'sustainable food', 'supply chain', 'fair trade',
-            'eco-tourism', 'green tourism', 'sustainable packaging',
-            'circular fashion'
         ]
     },
 
