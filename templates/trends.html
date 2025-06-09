@@ -8,130 +8,28 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .trend-card {
-            transition: transform 0.2s;
-            margin-bottom: 1rem;
-        }
-        .trend-card:hover {
-            transform: translateY(-5px);
-        }
-        .news-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .news-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(4px);
-        }
-        .news-item:last-child {
-            border-bottom: none;
-        }
-        .news-item h4 {
-            margin-bottom: 8px;
-            color: #1a202c;
-        }
-        .news-item p {
-            color: #4a5568;
-        }
-        .news-item .source {
-            color: #718096;
-            font-size: 0.875rem;
-        }
-        .news-item .date {
-            color: #718096;
-            font-size: 0.875rem;
-        }
-        .section-title {
-            color: #1a202c;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-        .chart-container {
-            height: 250px;
-            margin-bottom: 1rem;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 300px;
-            }
-        }
-        .news-container {
-            position: sticky;
-            top: 2rem;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        @media (min-width: 768px) {
-            .news-container {
-                max-height: 300px;
-            }
-        }
-        .chart-news-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        @media (min-width: 768px) {
-            .chart-news-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        .chart-section {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1rem;
-        }
-        @media (min-width: 768px) {
-            .chart-section {
-                padding: 1.5rem;
-            }
-        }
-        .news-section {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1rem;
-        }
-        @media (min-width: 768px) {
-            .news-section {
-                padding: 1.5rem;
-            }
-        }
-        /* 모바일 메뉴 스타일 */
-        .mobile-menu {
-            display: none;
-        }
-        @media (max-width: 768px) {
-            .mobile-menu {
-                display: block;
-            }
-            .desktop-menu {
-                display: none;
-            }
-            .mobile-menu-items {
-                display: none;
-            }
-            .mobile-menu-items.active {
-                display: block;
-            }
-        }
+        .chart-container { height: 300px; }
+        .news-list-container { max-height: 300px; overflow-y: auto; }
+        .news-item { padding: 0.75rem; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.2s; }
+        .news-item:hover { background-color: #f8f9fa; transform: translateX(4px); }
+        .news-item:last-child { border-bottom: none; }
+        .active-btn { background-color: #2f855a; color: white; }
+        .inactive-btn { background-color: #e2e8f0; color: #4a5568; }
+        .chart-section, .news-section { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); padding: 1.5rem; }
+        .chart-news-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .chart-news-grid { grid-template-columns: 1fr 1fr; } }
     </style>
-         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5708038591832731"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5708038591832731"
         crossorigin="anonymous"></script>
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGT3YHYT01"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-YGT3YHYT01');
-        </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGT3YHYT01"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-YGT3YHYT01');
+    </script>
 </head>
 <body class="bg-gray-100">
     <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
@@ -176,91 +74,31 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-4 md:py-8">
-        <!-- 기간 선택 -->
-        <div class="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 md:mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800">Trend Analysis</h2>
-                <div class="flex space-x-2 md:space-x-4 w-full md:w-auto">
-                    <button id="weeklyBtn" onclick="loadTrends('weekly')" 
-                            class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base">
-                        Weekly Report
-                    </button>
-                    <button id="monthlyBtn" onclick="loadTrends('monthly')"
-                            class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors duration-200 text-sm md:text-base">
-                        Monthly Report
-                    </button>
-                </div>
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <h2 class="text-2xl font-bold text-gray-800">Trend Analysis</h2>
+            <div class="flex space-x-2">
+                <button id="weeklyBtn" onclick="loadTrends('weekly')" class="px-4 py-2 rounded-md transition-colors"></button>
+                <button id="monthlyBtn" onclick="loadTrends('monthly')" class="px-4 py-2 rounded-md transition-colors"></button>
             </div>
         </div>
 
-        <!-- 메인 컨텐츠 -->
-        <div class="space-y-6 md:space-y-8">
-            <!-- 키워드 트렌드 -->
+        <div class="space-y-8">
             <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Top Keywords</h3>
-                    <div class="chart-container">
-                        <canvas id="keywordChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="keywordNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Keyword Related News</h3>
-                    <div id="keywordNewsList" class="news-container">
-                        <!-- 키워드 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
+                <div class="chart-section"><h3 class="text-xl font-bold mb-4">Top Keywords</h3><div class="chart-container"><canvas id="keywordChart"></canvas></div></div>
+                <div class="news-section"><h3 class="text-xl font-bold mb-4">Related News</h3><div id="keywordNewsList" class="news-list-container"></div></div>
             </div>
-
-            <!-- 출처 분포 -->
             <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">News Source Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="sourceChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="sourceNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Source Related News</h3>
-                    <div id="sourceNewsList" class="news-container">
-                        <!-- 출처 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
+                <div class="chart-section"><h3 class="text-xl font-bold mb-4">Source Distribution</h3><div class="chart-container"><canvas id="sourceChart"></canvas></div></div>
+                <div class="news-section"><h3 class="text-xl font-bold mb-4">Related News</h3><div id="sourceNewsList" class="news-list-container"></div></div>
             </div>
-
-            <!-- 카테고리 분포 -->
             <div class="chart-news-grid">
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Category Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                </div>
-                <div class="news-section">
-                    <h3 id="categoryNewsTitle" class="text-lg md:text-xl font-bold text-gray-800 mb-4">Category Related News</h3>
-                    <div id="categoryNewsList" class="news-container">
-                        <!-- 카테고리 관련 뉴스가 여기에 표시됩니다 -->
-                    </div>
-                </div>
+                <div class="chart-section"><h3 class="text-xl font-bold mb-4">Category Distribution</h3><div class="chart-container"><canvas id="categoryChart"></canvas></div></div>
+                <div class="news-section"><h3 class="text-xl font-bold mb-4">Related News</h3><div id="categoryNewsList" class="news-list-container"></div></div>
             </div>
-
-            <!-- 분석 리포트 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                <!-- 국가 분포 -->
-                <div class="chart-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Country Distribution</h3>
-                    <div class="chart-container">
-                        <canvas id="countryChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- 샘플 뉴스 목록 -->
-                <div class="news-section">
-                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Sample News</h3>
-                    <div id="newsList" class="news-container overflow-y-auto" style="max-height: 400px;">
-                        <!-- 뉴스가 여기에 동적으로 채워집니다. -->
-                    </div>
-                </div>
+            <div class="chart-news-grid">
+                <div class="chart-section"><h3 class="text-xl font-bold mb-4">Country Distribution</h3><div id="countryChartContainer" class="chart-container"></div></div>
+                <div class="news-section"><h3 class="text-xl font-bold mb-4">Related News</h3><div id="countryNewsList" class="news-list-container"></div></div>
             </div>
         </div>
     </main>
@@ -281,79 +119,119 @@
             menuItems.classList.toggle('active');
         }
 
-        let charts = {}; // 차트 인스턴스 관리
+        let charts = {};
+        let trendData = {};
+        const chartColors = ['#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#F44336', '#E91E63', '#9C27B0'];
 
-        // 차트 생성 함수들
-        function createChart(canvasId, type, labels, data, label) {
+        function renderNewsList(containerId, newsItems) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (!newsItems || newsItems.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 p-4 text-center">No related news found.</p>';
+                return;
+            }
+            newsItems.forEach(news => {
+                const newsEl = document.createElement('div');
+                newsEl.className = 'news-item';
+                newsEl.onclick = () => window.open(news.link, '_blank');
+                newsEl.innerHTML = `<h4 class="font-semibold text-gray-800">${news.title}</h4><div class="flex justify-between text-sm text-gray-500 mt-1"><span>${news.source || ''}</span><span>${(news.published || '').split('T')[0]}</span></div>`;
+                container.appendChild(newsEl);
+            });
+        }
+
+        function createOrUpdateChart(canvasId, type, chartData, onClickHandler) {
             if (charts[canvasId]) charts[canvasId].destroy();
-            const ctx = document.getElementById(canvasId).getContext('2d');
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
             charts[canvasId] = new Chart(ctx, {
                 type: type,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        backgroundColor: [
-                            '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107',
-                            '#FF9800', '#FF5722', '#F44336', '#E91E63', '#9C27B0'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
+                data: chartData,
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: type !== 'bar' } },
-                    scales: { y: { beginAtZero: true, display: type === 'bar' } }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: type !== 'bar', position: 'right' } },
+                    scales: { y: { beginAtZero: true, display: type === 'bar' } },
+                    onClick: (e, els) => { if (els.length > 0) onClickHandler(els[0].index); }
                 }
             });
         }
         
-        // --- loadTrends 함수 수정 ---
+        function updateButtonState(period) {
+            const weeklyBtn = document.getElementById('weeklyBtn');
+            const monthlyBtn = document.getElementById('monthlyBtn');
+            weeklyBtn.textContent = 'Weekly';
+            monthlyBtn.textContent = 'Monthly';
+            const btnClasses = (p) => `px-4 py-2 rounded-md transition-colors text-sm font-medium ${period === p ? 'active-btn' : 'inactive-btn'}`;
+            weeklyBtn.className = btnClasses('weekly');
+            monthlyBtn.className = btnClasses('monthly');
+        }
+
         async function loadTrends(period) {
-            try {
-                const response = await fetch(`/api/trends?period=${period}`);
-                const data = await response.json();
+            updateButtonState(period);
+            const response = await fetch(`/api/trends?period=${period}`);
+            trendData = await response.json();
+            const allNews = trendData.sample_news || [];
 
-                // 차트 데이터 생성
-                createChart('keywordChart', 'bar', data.top_keywords.map(d => d.keyword), data.top_keywords.map(d => d.count), 'Keyword Count');
-                createChart('sourceChart', 'doughnut', data.source_distribution.map(d => d.source), data.source_distribution.map(d => d.count), 'Source Distribution');
-                createChart('categoryChart', 'pie', data.category_distribution.map(d => d.category), data.category_distribution.map(d => d.count), 'Category Distribution');
-                
-                // 국가 분포 차트 추가
-                if (data.country_distribution && data.country_distribution.length > 0) {
-                    document.getElementById('countryChart').parentElement.parentElement.style.display = 'block';
-                    createChart('countryChart', 'doughnut', data.country_distribution.map(d => d.country), data.country_distribution.map(d => d.count), 'Country Distribution');
-                } else {
-                     document.getElementById('countryChart').parentElement.parentElement.style.display = 'none';
-                }
+            renderKeywordChart(allNews);
+            renderSourceChart(allNews);
+            renderCategoryChart(allNews);
+            renderCountryChart(allNews);
+        }
 
-                // 샘플 뉴스 목록 업데이트
-                const newsList = document.getElementById('newsList');
-                newsList.innerHTML = ''; // 기존 목록 비우기
-                if (data.sample_news && data.sample_news.length > 0) {
-                    data.sample_news.forEach(news => {
-                        const newsItem = `
-                            <div class="news-item" onclick="window.location.href='${news.link}'">
-                                <h4 class="font-semibold text-gray-800">${news.title}</h4>
-                                <div class="flex justify-between text-sm text-gray-500">
-                                    <span>${news.source}</span>
-                                    <span>${news.published}</span>
-                                </div>
-                            </div>`;
-                        newsList.innerHTML += newsItem;
-                    });
-                } else {
-                    newsList.innerHTML = '<p class="text-gray-500">No news available for this period.</p>';
-                }
+        function renderKeywordChart(initialNews) {
+            createOrUpdateChart('keywordChart', 'bar', {
+                labels: trendData.top_keywords.map(d => d.keyword),
+                datasets: [{ label: 'Count', data: trendData.top_keywords.map(d => d.count), backgroundColor: chartColors[0] }]
+            }, index => {
+                const keyword = trendData.top_keywords[index].keyword.toLowerCase();
+                const filtered = trendData.sample_news.filter(n => (n.title + (n.summary||'')).toLowerCase().includes(keyword));
+                renderNewsList('keywordNewsList', filtered);
+            });
+            renderNewsList('keywordNewsList', initialNews);
+        }
 
-            } catch (error) {
-                console.error('Error loading trends:', error);
-            }
+        function renderSourceChart(initialNews) {
+            createOrUpdateChart('sourceChart', 'doughnut', {
+                labels: trendData.source_distribution.map(d => d.source),
+                datasets: [{ data: trendData.source_distribution.map(d => d.count), backgroundColor: chartColors }]
+            }, index => {
+                const source = trendData.source_distribution[index].source;
+                renderNewsList('sourceNewsList', trendData.sample_news.filter(n => n.source === source));
+            });
+            renderNewsList('sourceNewsList', initialNews);
+        }
+
+        function renderCategoryChart(initialNews) {
+            createOrUpdateChart('categoryChart', 'pie', {
+                labels: trendData.category_distribution.map(d => d.category),
+                datasets: [{ data: trendData.category_distribution.map(d => d.count), backgroundColor: chartColors }]
+            }, index => {
+                const category = trendData.category_distribution[index].category;
+                renderNewsList('categoryNewsList', trendData.sample_news.filter(n => n.category === category));
+            });
+            renderNewsList('categoryNewsList', initialNews);
         }
         
-        // 페이지 로드 시 주간 리포트 로드
+        function renderCountryChart(initialNews) {
+            const container = document.getElementById('countryChartContainer');
+            const countryData = trendData.country_distribution;
+            if (!countryData || countryData.length === 0) {
+                container.innerHTML = '<div class="flex h-full items-center justify-center text-gray-500">No country data available.</div>';
+                renderNewsList('countryNewsList', []);
+                if(charts['countryChart']) { charts['countryChart'].destroy(); delete charts['countryChart']; }
+                return;
+            }
+            container.innerHTML = '<canvas id="countryChart"></canvas>';
+            createOrUpdateChart('countryChart', 'doughnut', {
+                labels: countryData.map(d => d.country),
+                datasets: [{ data: countryData.map(d => d.count), backgroundColor: chartColors }]
+            }, index => {
+                const country = countryData[index].country.toLowerCase();
+                renderNewsList('countryNewsList', trendData.sample_news.filter(n => (n.title + (n.summary||'')).toLowerCase().includes(country)));
+            });
+            renderNewsList('countryNewsList', initialNews);
+        }
+
         document.addEventListener('DOMContentLoaded', () => loadTrends('weekly'));
     </script>
 </body>
