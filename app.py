@@ -5,7 +5,7 @@ import atexit
 
 # 공용 확장 모듈과 서비스 로직을 가져옵니다.
 from extensions import redis_client, scheduler
-from services import update_news_cache
+from services import update_news_cache, update_reports_cache
 
 # 뷰(블루프린트)들을 가져옵니다.
 from views.main import main_bp
@@ -30,22 +30,34 @@ def create_app():
     with app.app_context():
         try:
             update_news_cache()
-            app.logger.info("Initial cache update completed successfully on startup.")
+            update_reports_cache()
+            app.logger.info("Initial cache updates completed successfully on startup.")
         except Exception as e:
             app.logger.error(f"Error during initial cache update on startup: {e}")
 
     # 백그라운드 캐시 업데이트 작업 스케줄링
-    if redis_client and not scheduler.get_job('update_news_cache'):
-        # 15분마다 주기적으로 실행
-        scheduler.add_job(
-            func=update_news_cache, 
-            trigger='interval', 
-            minutes=15, 
-            id='update_news_cache',
-            name='Periodic News Cache Update',
-            replace_existing=True
-        )
-        app.logger.info("Scheduled news cache update job (every 15 minutes).")
+    if redis_client:
+        if not scheduler.get_job('update_news_cache'):
+            scheduler.add_job(
+                func=update_news_cache, 
+                trigger='interval', 
+                minutes=30, 
+                id='update_news_cache',
+                name='Periodic News Cache Update',
+                replace_existing=True
+            )
+            app.logger.info("Scheduled news cache update job (every 30 minutes).")
+        
+        if not scheduler.get_job('update_reports_cache'):
+            scheduler.add_job(
+                func=update_reports_cache,
+                trigger='interval',
+                minutes=30,
+                id='update_reports_cache',
+                name='Periodic Reports Cache Update',
+                replace_existing=True
+            )
+            app.logger.info("Scheduled reports cache update job (every 30 minutes).")
 
     # 정적 파일 라우트
     @app.route('/ads.txt')

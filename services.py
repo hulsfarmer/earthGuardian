@@ -183,4 +183,64 @@ def get_cached_trends_data(period='weekly'):
     cached_trends = redis_client.get(f'cache:trends:{period}')
     if not cached_trends: return None
     
-    return json.loads(cached_trends) 
+    return json.loads(cached_trends)
+
+def update_reports_cache():
+    """Reports 페이지에 필요한 데이터를 미리 계산하여 캐시에 저장합니다."""
+    if not redis_client:
+        logger.error("CACHE_REPORTS_JOB: Redis client not available.")
+        return
+
+    logger.info("CACHE_REPORTS_JOB: Starting reports cache update.")
+
+    def _get_all_dates_from_redis(prefix):
+        """지정된 prefix를 가진 모든 키에서 날짜를 추출합니다."""
+        keys = sorted(redis_client.keys(f"{prefix}*"), reverse=True)
+        dates = []
+        for k in keys:
+            date_part = k.decode('utf-8')[len(prefix):]
+            if len(date_part) == 8 and date_part.isdigit():
+                dates.append(f"{date_part[0:4]}-{date_part[4:6]}-{date_part[6:8]}")
+        return dates
+
+    def _load_report_content(key):
+        """Redis에서 리포트 내용을 로드합니다."""
+        raw = redis_client.get(key)
+        if not raw: return None
+        # 간단한 텍스트 처리만 가정합니다. 필요시 load_report_from_redis의 복잡한 로직 추가.
+        return raw.decode('utf-8').replace('\\n', '<br>')
+
+    daily_dates = _get_all_dates_from_redis("dailyreport-")
+    weekly_dates = _get_all_dates_from_redis("weeklyreport-")
+    monthly_dates = _get_all_dates_from_redis("monthlyreport-")
+
+    latest_daily_report = None
+    if daily_dates:
+        latest_daily_report = _load_report_content(f"dailyreport-{daily_dates[0].replace('-', '')}")
+
+    reports_page_data = {
+        "daily_dates": json.dumps(daily_dates),
+        "weekly_dates": json.dumps(weekly_dates),
+        "monthly_dates": json.dumps(monthly_dates),
+        "latest_daily_report": json.dumps(latest_daily_report)
+    }
+    
+    redis_client.hmset('cache:reports_page', reports_page_data)
+    logger.info("CACHE_REPORTS_JOB: Finished reports cache update.")
+
+def get_cached_reports_data():
+    """캐시된 Reports 페이지 데이터를 가져옵니다."""
+    if not redis_client: return None, None, None, None
+    
+    cached_data = redis_client.hgetall('cache:reports_page')
+    if not cached_data: return None, None, None, None
+
+    try:
+        daily_dates = json.loads(cached_data.get(b'daily_dates', b'[]'))
+        weekly_dates = json.loads(cached_data.get(b'weekly_dates', b'[]'))
+        monthly_dates = json.loads(cached_data.get(b'monthly_dates', b'[]'))
+        latest_daily_report = json.loads(cached_data.get(b'latest_daily_report', b'null'))
+        return daily_dates, weekly_dates, monthly_dates, latest_daily_report
+    except (json.JSONDecodeError, TypeError) as e:
+        logger.error(f"Error decoding cached reports data: {e}")
+        return None, None, None, None 
