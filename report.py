@@ -10,6 +10,7 @@ from datetime import timezone
 
 # 공용 redis_client와 scheduler를 import합니다.
 from extensions import redis_client, scheduler
+from services import get_cached_reports_data
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 logger = logging.getLogger(__name__)
@@ -54,83 +55,57 @@ def load_report_from_redis(key_name):
     return text.replace('\n', '<br>')
 
 
-def list_report_dates(prefix, page=1, per_page=20):
-    """
-    Redis에 저장된 키 중 prefix로 시작하는 것들을 스캔하여, 날짜 문자열 목록을 반환합니다.
-    페이지네이션을 지원합니다.
-    """
-    client = get_redis_client()
-    pattern = f"{prefix}*"
-    # 주의: SCAN은 전체 키를 순회하므로, 키가 매우 많을 경우 성능이 저하될 수 있습니다.
-    # 이상적으로는 이 목록을 별도의 리스트나 정렬된 세트로 관리해야 합니다.
-    # 여기서는 기존 구조를 유지한 채 페이지네이션을 구현합니다.
-    all_keys = sorted(client.keys(pattern), reverse=True)
-    
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_keys = all_keys[start:end]
-
-    dates = []
-    for k in paginated_keys:
-        date_part = k[len(prefix):]
-        if len(date_part) == 8 and date_part.isdigit():
-            formatted = f"{date_part[0:4]}-{date_part[4:6]}-{date_part[6:8]}"
-            dates.append(formatted)
-
-    total_items = len(all_keys)
-    total_pages = (total_items + per_page - 1) // per_page
-    
-    return dates, total_pages
-
-
 @reports_bp.route('/')
 def reports_index():
     """
     /reports 경로
-    페이지네이션을 사용하여 리포트 목록을 표시합니다.
+    캐시된 데이터를 사용하여 리포트 목록을 표시하고, 페이지네이션을 적용합니다.
     """
     daily_page = request.args.get('daily_page', 1, type=int)
     weekly_page = request.args.get('weekly_page', 1, type=int)
     monthly_page = request.args.get('monthly_page', 1, type=int)
+    per_page = 20
+
+    # 캐시에서 모든 데이터를 한 번에 가져옵니다.
+    (
+        all_daily_dates, all_weekly_dates, all_monthly_dates,
+        latest_daily_report, latest_weekly_report, latest_monthly_report
+    ) = get_cached_reports_data()
     
-    daily_dates, daily_total_pages = list_report_dates("dailyreport-", page=daily_page, per_page=20)
-    weekly_dates, weekly_total_pages = list_report_dates("weeklyreport-", page=weekly_page, per_page=20)
-    monthly_dates, monthly_total_pages = list_report_dates("monthlyreport-", page=monthly_page, per_page=20)
+    if all_daily_dates is None: all_daily_dates = []
+    if all_weekly_dates is None: all_weekly_dates = []
+    if all_monthly_dates is None: all_monthly_dates = []
 
-    # 각 섹션별 가장 최근 리포트 콘텐츠 미리 로드
-    daily_latest_dates, _ = list_report_dates("dailyreport-", page=1, per_page=1)
-    weekly_latest_dates, _ = list_report_dates("weeklyreport-", page=1, per_page=1)
-    monthly_latest_dates, _ = list_report_dates("monthlyreport-", page=1, per_page=1)
-    
-    daily_latest_report = None
-    if daily_latest_dates:
-        key_date = daily_latest_dates[0].replace('-', '')
-        daily_latest_report = load_report_from_redis(f"dailyreport-{key_date}")
+    # 페이지네이션 처리
+    daily_start = (daily_page - 1) * per_page
+    daily_end = daily_start + per_page
+    daily_dates_paginated = all_daily_dates[daily_start:daily_end]
+    daily_total_pages = (len(all_daily_dates) + per_page - 1) // per_page
 
-    weekly_latest_report = None
-    if weekly_latest_dates:
-        key_date = weekly_latest_dates[0].replace('-', '')
-        weekly_latest_report = load_report_from_redis(f"weeklyreport-{key_date}")
+    weekly_start = (weekly_page - 1) * per_page
+    weekly_end = weekly_start + per_page
+    weekly_dates_paginated = all_weekly_dates[weekly_start:weekly_end]
+    weekly_total_pages = (len(all_weekly_dates) + per_page - 1) // per_page
 
-    monthly_latest_report = None
-    if monthly_latest_dates:
-        key_date = monthly_latest_dates[0].replace('-', '')
-        monthly_latest_report = load_report_from_redis(f"monthlyreport-{key_date}")
+    monthly_start = (monthly_page - 1) * per_page
+    monthly_end = monthly_start + per_page
+    monthly_dates_paginated = all_monthly_dates[monthly_start:monthly_end]
+    monthly_total_pages = (len(all_monthly_dates) + per_page - 1) // per_page
     
     return render_template(
         'reports.html',
-        daily_dates=daily_dates,
+        daily_dates=daily_dates_paginated,
         daily_page=daily_page,
         daily_total_pages=daily_total_pages,
-        weekly_dates=weekly_dates,
+        weekly_dates=weekly_dates_paginated,
         weekly_page=weekly_page,
         weekly_total_pages=weekly_total_pages,
-        monthly_dates=monthly_dates,
+        monthly_dates=monthly_dates_paginated,
         monthly_page=monthly_page,
         monthly_total_pages=monthly_total_pages,
-        daily_latest_report=daily_latest_report,
-        weekly_latest_report=weekly_latest_report,
-        monthly_latest_report=monthly_latest_report
+        daily_latest_report=latest_daily_report,
+        weekly_latest_report=latest_weekly_report,
+        monthly_latest_report=latest_monthly_report
     )
 
 

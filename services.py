@@ -218,11 +218,21 @@ def update_reports_cache():
     if daily_dates:
         latest_daily_report = _load_report_content(f"dailyreport-{daily_dates[0].replace('-', '')}")
 
+    latest_weekly_report = None
+    if weekly_dates:
+        latest_weekly_report = _load_report_content(f"weeklyreport-{weekly_dates[0].replace('-', '')}")
+
+    latest_monthly_report = None
+    if monthly_dates:
+        latest_monthly_report = _load_report_content(f"monthlyreport-{monthly_dates[0].replace('-', '')}")
+
     reports_page_data = {
         "daily_dates": json.dumps(daily_dates),
         "weekly_dates": json.dumps(weekly_dates),
         "monthly_dates": json.dumps(monthly_dates),
-        "latest_daily_report": json.dumps(latest_daily_report)
+        "latest_daily_report": json.dumps(latest_daily_report),
+        "latest_weekly_report": json.dumps(latest_weekly_report),
+        "latest_monthly_report": json.dumps(latest_monthly_report)
     }
     
     redis_client.hmset('cache:reports_page', reports_page_data)
@@ -230,17 +240,19 @@ def update_reports_cache():
 
 def get_cached_reports_data():
     """캐시된 Reports 페이지 데이터를 가져옵니다."""
-    if not redis_client: return None, None, None, None
+    if not redis_client: return (None,) * 6
     
     cached_data = redis_client.hgetall('cache:reports_page')
-    if not cached_data: return None, None, None, None
+    if not cached_data: return (None,) * 6
 
     try:
         daily_dates = json.loads(cached_data.get(b'daily_dates', b'[]'))
         weekly_dates = json.loads(cached_data.get(b'weekly_dates', b'[]'))
         monthly_dates = json.loads(cached_data.get(b'monthly_dates', b'[]'))
         latest_daily_report = json.loads(cached_data.get(b'latest_daily_report', b'null'))
-        return daily_dates, weekly_dates, monthly_dates, latest_daily_report
+        latest_weekly_report = json.loads(cached_data.get(b'latest_weekly_report', b'null'))
+        latest_monthly_report = json.loads(cached_data.get(b'latest_monthly_report', b'null'))
+        return daily_dates, weekly_dates, monthly_dates, latest_daily_report, latest_weekly_report, latest_monthly_report
     except (json.JSONDecodeError, TypeError) as e:
         logger.error(f"Error decoding cached reports data: {e}")
-        return None, None, None, None 
+        return (None,) * 6 
