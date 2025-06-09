@@ -64,6 +64,8 @@ def fetch_all_news_from_redis():
             news_data = news_item.get('value', {})
             news_data['redis_key'] = key
             
+            # category와 country 필드를 news_data에 확실하게 포함시킵니다.
+            news_data['country'] = news_item.get('value', {}).get('country')
             redis_category = news_data.get('category')
             is_valid = any(redis_category == cat_info['name'] for cat_info in CATEGORIES.values())
             news_data['category'] = redis_category if is_valid else categorize_news(news_data)
@@ -129,11 +131,11 @@ def update_news_cache():
             trends_data['category_distribution'] = [{'category': cat, 'count': c} for cat, c in Counter(n.get('category', 'Others') for n in recent_news).items()]
             
             # 국가 분포 계산 로직 추가
-            country_counts = Counter(n['country'] for n in recent_news if 'country' in n)
+            country_counts = Counter(n['country'] for n in recent_news if n.get('country'))
             trends_data['country_distribution'] = [{'country': country, 'count': count} for country, count in country_counts.most_common(10)]
 
-            # 샘플 뉴스 개수 10개로 확대
-            trends_data['sample_news'] = recent_news[:10]
+            # 샘플 뉴스 개수를 50개로 확대하여 필터링 정확도 향상
+            trends_data['sample_news'] = recent_news[:50]
 
         redis_client.set(f'cache:trends:{period}', json.dumps(trends_data, default=str))
     logger.info("CACHE_UPDATE_JOB: Finished news cache update.")
