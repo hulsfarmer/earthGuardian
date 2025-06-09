@@ -134,8 +134,8 @@ def update_news_cache():
             country_counts = Counter(n['country'] for n in recent_news if n.get('country'))
             trends_data['country_distribution'] = [{'country': country, 'count': count} for country, count in country_counts.most_common(10)]
 
-            # 샘플 뉴스 개수를 50개로 확대하여 필터링 정확도 향상
-            trends_data['sample_news'] = recent_news[:50]
+            # 샘플 뉴스 제한을 제거하고, 기간 내 모든 뉴스를 전송하여 필터링 정확도 보장
+            trends_data['sample_news'] = recent_news
 
         redis_client.set(f'cache:trends:{period}', json.dumps(trends_data, default=str))
     logger.info("CACHE_UPDATE_JOB: Finished news cache update.")

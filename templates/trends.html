@@ -226,8 +226,8 @@
                 labels: countryData.map(d => d.country),
                 datasets: [{ data: countryData.map(d => d.count), backgroundColor: chartColors }]
             }, index => {
-                const country = countryData[index].country;
-                renderNewsList('countryNewsList', trendData.sample_news.filter(n => n.country === country));
+                const country = countryData[index].country.toLowerCase();
+                renderNewsList('countryNewsList', trendData.sample_news.filter(n => (n.title + (n.summary||'')).toLowerCase().includes(country)));
             });
             renderNewsList('countryNewsList', initialNews);
         }
