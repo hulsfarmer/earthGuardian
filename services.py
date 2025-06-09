@@ -109,7 +109,7 @@ def update_news_cache():
     # 트렌드 데이터
     for period in ['weekly', 'monthly']:
         cutoff = datetime.now(timezone.utc) - timedelta(days=7 if period == 'weekly' else 30)
-        recent_news = [item for item in all_news if item['_parsed_published_date'] >= cutoff]
+        recent_news = [item for item in all_news if item.get('_parsed_published_date', datetime.min.replace(tzinfo=timezone.utc)) >= cutoff]
         
         trends_data = { 'top_keywords': [], 'source_distribution': [], 'category_distribution': [], 'country_distribution': [], 'sample_news': [] }
         if recent_news:
@@ -122,10 +122,18 @@ def update_news_cache():
             
             common_exclude = {'news','report','world','global','issue','new','says','company','government','country','state','million','billion','week','year','time','people','climate','energy','environmental'}
             keyword_counts = Counter(w for w in all_words if w not in common_exclude)
+            
+            # 데이터 계산
             trends_data['top_keywords'] = [{'keyword': k, 'count': c} for k, c in keyword_counts.most_common(20)]
-            trends_data['source_distribution'] = [{'source': k, 'count': c} for k, c in Counter(n['source'] for n in recent_news if 'source' in n).most_common(10)]
-            trends_data['category_distribution'] = [{'category': k, 'count': c} for k, c in Counter(n.get('category', 'Others') for n in recent_news).items()]
-            trends_data['sample_news'] = recent_news[:5]
+            trends_data['source_distribution'] = [{'source': s, 'count': c} for s, c in Counter(n['source'] for n in recent_news if 'source' in n).most_common(10)]
+            trends_data['category_distribution'] = [{'category': cat, 'count': c} for cat, c in Counter(n.get('category', 'Others') for n in recent_news).items()]
+            
+            # 국가 분포 계산 로직 추가
+            country_counts = Counter(n['country'] for n in recent_news if 'country' in n)
+            trends_data['country_distribution'] = [{'country': country, 'count': count} for country, count in country_counts.most_common(10)]
+
+            # 샘플 뉴스 개수 10개로 확대
+            trends_data['sample_news'] = recent_news[:10]
 
         redis_client.set(f'cache:trends:{period}', json.dumps(trends_data, default=str))
     logger.info("CACHE_UPDATE_JOB: Finished news cache update.")
