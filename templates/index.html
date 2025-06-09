@@ -160,12 +160,12 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                         >
                             <option value="">All Categories</option>
-                            {% for category_id, category in categories.items() %}
+                            {% for category_id, category_name in categories.items() %}
                                 <option
                                     value="{{ category_id }}"
                                     {% if category_id == current_category %}selected{% endif %}
                                 >
-                                    {{ category.name }}
+                                    {{ category_name }}
                                 </option>
                             {% endfor %}
                         </select>
@@ -185,7 +185,7 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                         >
                             <option value="">All Sources</option>
-                            {% for source in sources %}
+                            {% for source in sorted_sources %}
                                 <option
                                     value="{{ source }}"
                                     {% if source == current_source %}selected{% endif %}
@@ -238,9 +238,9 @@
         </div>
 
         <!-- 카테고리별 뉴스 섹션 -->
-        {% for category_id, category in categories.items() %}
+        {% for category_id, news_list in categorized_news.items() %}
             {# 선택된 카테고리 없거나, 현재 카테고리가 이 category_id와 같아야 섹션을 렌더링 #}
-            {% if not current_category or category_id == current_category %}
+            {% if (not current_category or category_id == current_category) and news_list %}
                 <section
                     id="{{ category_id }}"
                     class="category-section mb-8 md:mb-12"
@@ -248,9 +248,9 @@
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <h2
                             class="text-xl md:text-2xl font-bold text-gray-800 cursor-pointer hover:text-green-600 transition-colors"
-                            onclick="toggleCategory('{{ category_id }}')"
+                            onclick="scrollToCategory('{{ category_id }}')"
                         >
-                            {{ category.name }}
+                            {{ categories[category_id] }}
                         </h2>
                         <button
                             onclick="toggleCategory('{{ category_id }}')"
@@ -267,7 +267,7 @@
                     {% set ns = namespace(count=0) %}
                     <div class="news-grid collapsed" id="grid-{{ category_id }}">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                            {% for news in categorized_news[category_id] %}
+                            {% for news in news_list %}
                                 {# 카테고리와 소스 조건 검사 #}
                                 {% if (not current_category or category_id == current_category)
                                        and (not current_source or news.source == current_source) %}
