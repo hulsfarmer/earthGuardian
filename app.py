@@ -81,10 +81,11 @@ def create_app():
 
     return app
 
+# Gunicorn이 찾을 수 있도록 전역 스코프에서 app 객체 생성
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    
-    # 스케줄러 시작
+    # 로컬에서 실행 시 스케줄러 시작
     if scheduler.state != 1: # Not running
         scheduler.start()
         # 애플리케이션 종료 시 스케줄러가 안전하게 종료되도록 등록
