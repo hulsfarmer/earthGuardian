@@ -3,6 +3,6 @@ services:
     name: earthGuardian
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn "app:create_app()"
 
 # Celery 워커를 없애려면 여기 worker 블록을 쓰지 않는다
