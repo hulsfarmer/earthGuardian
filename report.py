@@ -5,8 +5,14 @@ import redis
 import pickle
 import datetime
 from flask import Blueprint, render_template, request, jsonify
+import logging
+from datetime import timezone
+
+# 공용 redis_client와 scheduler를 import합니다.
+from extensions import redis_client, scheduler
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
+logger = logging.getLogger(__name__)
 
 
 def get_redis_client():
@@ -139,3 +145,75 @@ def get_report_api(report_type):
         return jsonify({'content': msg})
 
     return jsonify({'content': content})
+
+
+@reports_bp.route('/news', methods=['POST'])
+def report_news():
+    """
+    특정 뉴스 아이템을 신고하고, 'reported' 목록으로 옮깁니다.
+    성공적으로 신고되면 캐시를 즉시 업데이트하도록 스케줄링합니다.
+    """
+    if not redis_client:
+        logger.error("REPORT_NEWS: Redis client not available.")
+        return jsonify({"status": "error", "message": "Database connection failed"}), 500
+
+    data = request.get_json()
+    if not data or 'redis_key' not in data or 'reason' not in data:
+        return jsonify({"status": "error", "message": "Invalid report data"}), 400
+
+    redis_key = data['redis_key']
+    reason = data['reason']
+
+    try:
+        news_item_json = redis_client.get(redis_key)
+        if not news_item_json:
+            return jsonify({"status": "error", "message": "News item not found"}), 404
+            
+        # 원본 키 삭제 및 신고 목록에 추가
+        pipe = redis_client.pipeline()
+        pipe.delete(redis_key)
+        reported_key = f"reported:{redis_key}"
+        pipe.hset(reported_key, mapping={
+            "reported_at": datetime.now(timezone.utc).isoformat(),
+            "reason": reason,
+            "news_item": news_item_json
+        })
+        pipe.execute()
+        
+        # 캐시 즉시 업데이트 스케줄링
+        if scheduler.state == 1: # STATE_RUNNING
+            from services import update_news_cache
+            scheduler.add_job(
+                update_news_cache, 
+                id='immediate_cache_update_after_report',
+                replace_existing=True,
+                name="Immediate Cache Update after Report"
+            )
+            logger.info(f"REPORT_NEWS: Scheduled immediate cache update after reporting key: {redis_key}")
+
+        return jsonify({"status": "success", "message": "News reported and removed"}), 200
+            
+    except Exception as e:
+        logger.error(f"REPORT_NEWS: Error processing report for key {redis_key}: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": "An internal server error occurred"}), 500
+
+
+@reports_bp.route('/', methods=['GET'])
+def list_reports():
+    """
+    신고된 뉴스 목록을 보여주는 관리자용 페이지를 렌더링합니다.
+    """
+    if not redis_client:
+        return "Error: Redis connection not available.", 500
+        
+    reported_keys = redis_client.keys('reported:news-*')
+    reports = []
+    if reported_keys:
+        for key in reported_keys:
+            report_data = redis_client.hgetall(key)
+            reports.append({
+                'key': key,
+                'reported_at': report_data.get('reported_at', 'N/A'),
+                'reason': report_data.get('reason', 'N/A')
+            })
+    return render_template('reports/list.html', reports=reports)
