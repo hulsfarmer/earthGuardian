@@ -36,6 +36,27 @@ CATEGORIES = {
     'others': { 'name': 'Others', 'keywords': [] }
 }
 
+# 국가 추론을 위한 목록
+COUNTRY_LIST = [
+    'argentina', 'australia', 'brazil', 'canada', 'china', 'france', 'germany', 'india', 
+    'indonesia', 'italy', 'japan', 'mexico', 'russia', 'saudi arabia', 'south africa', 
+    'south korea', 'korea', 'turkey', 'uk', 'united kingdom', 'u.k.', 'britain',
+    'us', 'u.s.', 'states', 'america', 'eu', 'european union'
+]
+
+def infer_country(news_item):
+    """뉴스 제목과 요약에서 국가를 추론합니다."""
+    text = (news_item.get('title', '') + ' ' + news_item.get('summary', '')).lower()
+    for country in COUNTRY_LIST:
+        # 단어 경계를 확인하여 'us'가 'russia'의 일부로 인식되는 것을 방지
+        if re.search(r'\b' + re.escape(country) + r'\b', text):
+            # 표준 이름으로 변환
+            if country in ['us', 'u.s.', 'states', 'america']: return 'United States'
+            if country in ['uk', 'u.k.', 'britain', 'united kingdom']: return 'United Kingdom'
+            if country in ['south korea']: return 'Korea'
+            return country.capitalize()
+    return None
+
 def categorize_news(news_item):
     title_lower = news_item.get('title', '').lower()
     summary_lower = news_item.get('summary', '').lower()
@@ -115,6 +136,11 @@ def update_news_cache():
         
         trends_data = { 'top_keywords': [], 'source_distribution': [], 'category_distribution': [], 'country_distribution': [], 'sample_news': [] }
         if recent_news:
+            # 국가 정보가 없는 경우, 제목/요약에서 추론하여 채워넣기
+            for news in recent_news:
+                if not news.get('country'):
+                    news['country'] = infer_country(news)
+
             all_words = []
             for news in recent_news:
                 combined = f"{news.get('title','')} {news.get('summary','')}".lower()
