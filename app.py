@@ -26,18 +26,20 @@ def create_app():
     app.register_blueprint(trends_bp)
     app.register_blueprint(reports_bp) # url_prefix='/reports'가 이미 설정되어 있습니다.
 
+    # 애플리케이션 컨텍스트 내에서 초기 캐시 업데이트를 직접 실행
+    with app.app_context():
+        try:
+            update_news_cache()
+            app.logger.info("Initial cache update completed successfully on startup.")
+        except Exception as e:
+            app.logger.error(f"Error during initial cache update on startup: {e}")
+
     # 백그라운드 캐시 업데이트 작업 스케줄링
     if redis_client and not scheduler.get_job('update_news_cache'):
-        # 앱 시작 시 한 번 즉시 실행
+        # 15분마다 주기적으로 실행
         scheduler.add_job(
-            update_news_cache, 
-            id='initial_cache_update',
-            name='Initial News Cache Update'
-        )
-        # 그 후 15분마다 주기적으로 실행
-        scheduler.add_job(
-            update_news_cache, 
-            'interval', 
+            func=update_news_cache, 
+            trigger='interval', 
             minutes=15, 
             id='update_news_cache',
             name='Periodic News Cache Update',
