@@ -140,6 +140,20 @@
             <option disabled>No daily reports</option>
           {% endif %}
         </select>
+        <!-- Daily Pagination -->
+        <div class="flex justify-between items-center mt-auto pt-4">
+          {% if daily_page > 1 %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page - 1, weekly_page=weekly_page, monthly_page=monthly_page) }}" class="text-green-600 hover:underline">&laquo; Previous</a>
+          {% else %}
+            <span class="text-gray-400">&laquo; Previous</span>
+          {% endif %}
+          <span class="text-gray-600">Page {{ daily_page }} of {{ daily_total_pages }}</span>
+          {% if daily_page < daily_total_pages %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page + 1, weekly_page=weekly_page, monthly_page=monthly_page) }}" class="text-green-600 hover:underline">Next &raquo;</a>
+          {% else %}
+            <span class="text-gray-400">Next &raquo;</span>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Weekly Reports 섹션 -->
@@ -157,6 +171,20 @@
             <option disabled>No weekly reports</option>
           {% endif %}
         </select>
+        <!-- Weekly Pagination -->
+        <div class="flex justify-between items-center mt-auto pt-4">
+          {% if weekly_page > 1 %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page, weekly_page=weekly_page - 1, monthly_page=monthly_page) }}" class="text-green-600 hover:underline">&laquo; Previous</a>
+          {% else %}
+            <span class="text-gray-400">&laquo; Previous</span>
+          {% endif %}
+          <span class="text-gray-600">Page {{ weekly_page }} of {{ weekly_total_pages }}</span>
+          {% if weekly_page < weekly_total_pages %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page, weekly_page=weekly_page + 1, monthly_page=monthly_page) }}" class="text-green-600 hover:underline">Next &raquo;</a>
+          {% else %}
+            <span class="text-gray-400">Next &raquo;</span>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Monthly Reports 섹션 -->
@@ -174,6 +202,20 @@
             <option disabled>No monthly reports</option>
           {% endif %}
         </select>
+        <!-- Monthly Pagination -->
+        <div class="flex justify-between items-center mt-auto pt-4">
+          {% if monthly_page > 1 %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page, weekly_page=weekly_page, monthly_page=monthly_page - 1) }}" class="text-green-600 hover:underline">&laquo; Previous</a>
+          {% else %}
+            <span class="text-gray-400">&laquo; Previous</span>
+          {% endif %}
+          <span class="text-gray-600">Page {{ monthly_page }} of {{ monthly_total_pages }}</span>
+          {% if monthly_page < monthly_total_pages %}
+            <a href="{{ url_for('reports.reports_index', daily_page=daily_page, weekly_page=weekly_page, monthly_page=monthly_page + 1) }}" class="text-green-600 hover:underline">Next &raquo;</a>
+          {% else %}
+            <span class="text-gray-400">Next &raquo;</span>
+          {% endif %}
+        </div>
       </div>
     </div>
 
@@ -181,7 +223,7 @@
     <div id="report-content"
          class="bg-white rounded-lg shadow-md p-6 text-gray-700"
          style="line-height: 1.8; font-size: 1.05rem;">
-      {# 서버 사이드에서 “daily_latest_report” 변수를 전달하여 초기 렌더링 시 가장 최근 일일 리포트만 보여주도록 합니다. #}
+      {# 서버 사이드에서 "daily_latest_report" 변수를 전달하여 초기 렌더링 시 가장 최근 일일 리포트만 보여주도록 합니다. #}
       {% if daily_latest_report %}
         {{ daily_latest_report|safe }}
       {% else %}
