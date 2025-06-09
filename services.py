@@ -9,6 +9,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import nltk
 import redis
+import os
 
 from extensions import redis_client
 
@@ -194,9 +195,22 @@ def update_reports_cache():
 
     logger.info("CACHE_REPORTS_JOB: Starting reports cache update.")
 
+    # report.py에서 사용하던 방식과 동일한 Redis 클라이언트를 생성하여 일관성 보장
+    def _get_report_redis_client():
+        try:
+            # decode_responses=False로 설정하여 byte를 직접 다룹니다.
+            return redis.StrictRedis.from_url(os.getenv('REDIS_URL'), decode_responses=False)
+        except Exception:
+            return None
+
+    report_client = _get_report_redis_client()
+    if not report_client:
+        logger.error("CACHE_REPORTS_JOB: Could not create a dedicated redis client for reports.")
+        return
+
     def _get_all_dates_from_redis(prefix):
         """지정된 prefix를 가진 모든 키에서 날짜를 추출합니다."""
-        keys = sorted(redis_client.keys(f"{prefix}*"), reverse=True)
+        keys = sorted(report_client.keys(f"{prefix}*"), reverse=True)
         dates = []
         for k in keys:
             date_part = k.decode('utf-8')[len(prefix):]
@@ -206,7 +220,7 @@ def update_reports_cache():
 
     def _load_report_content(key):
         """Redis에서 리포트 내용을 로드합니다."""
-        raw = redis_client.get(key)
+        raw = report_client.get(key)
         if not raw: return None
         # 간단한 텍스트 처리만 가정합니다. 필요시 load_report_from_redis의 복잡한 로직 추가.
         return raw.decode('utf-8').replace('\\n', '<br>')
