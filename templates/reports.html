@@ -223,9 +223,13 @@
     <div id="report-content"
          class="bg-white rounded-lg shadow-md p-6 text-gray-700"
          style="line-height: 1.8; font-size: 1.05rem;">
-      {# 서버 사이드에서 "daily_latest_report" 변수를 전달하여 초기 렌더링 시 가장 최근 일일 리포트만 보여주도록 합니다. #}
+      {# 최신 리포트를 일일 > 주간 > 월간 순으로 우선 표시 #}
       {% if daily_latest_report %}
         {{ daily_latest_report|safe }}
+      {% elif weekly_latest_report %}
+        {{ weekly_latest_report|safe }}
+      {% elif monthly_latest_report %}
+        {{ monthly_latest_report|safe }}
       {% else %}
         <p class="text-gray-500">Select a report from above to view its content.</p>
       {% endif %}
