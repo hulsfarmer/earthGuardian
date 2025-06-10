@@ -28,7 +28,8 @@ def linkify(text):
     """
     # URL을 찾기 위한 정규표현식
     # http/https뿐만 아니라 www. 로 시작하는 주소도 링크로 변환합니다.
-    url_pattern = re.compile(r'((?:https?://|www\.)[^\s<]+)')
+    # URL 끝에 있는 괄호나 마침표는 제외합니다.
+    url_pattern = re.compile(r'((?:https?://|www\.)[^\s<]+?)(?:\)|\.|$)(?=\s|$)')
     
     def add_protocol(match):
         url = match.group(1)
