@@ -228,7 +228,7 @@ def _load_report_from_redis_compat(client, key_name):
         pass
 
     # 3) 단순 텍스트: 줄바꿈을 <br>로 변환하여 반환
-    return text.replace('\\n', '<br>')
+    return text.replace('\n', '<br>')
 
 def update_reports_cache():
     """Reports 페이지에 필요한 데이터를 미리 계산하여 캐시에 저장합니다."""
