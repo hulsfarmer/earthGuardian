@@ -264,19 +264,19 @@ def update_reports_cache():
         # 키 이름은 utf-8 문자열이어야 합니다.
         key_name = f"dailyreport-{daily_dates[0].replace('-', '')}"
         latest_daily_report = _load_report_from_redis_compat(report_client, key_name)
-        logger.info(f"CACHE_REPORTS_JOB: Loaded latest daily report for key '{key_name}'. Content is None: {latest_daily_report is None}")
+        logger.info(f"CACHE_REPORTS_JOB: Loaded daily report for key '{key_name}'. Type: {type(latest_daily_report)}, Length: {len(latest_daily_report) if latest_daily_report is not None else 0}")
 
     latest_weekly_report = None
     if weekly_dates:
         key_name = f"weeklyreport-{weekly_dates[0].replace('-', '')}"
         latest_weekly_report = _load_report_from_redis_compat(report_client, key_name)
-        logger.info(f"CACHE_REPORTS_JOB: Loaded latest weekly report for key '{key_name}'. Content is None: {latest_weekly_report is None}")
+        logger.info(f"CACHE_REPORTS_JOB: Loaded weekly report for key '{key_name}'. Type: {type(latest_weekly_report)}, Length: {len(latest_weekly_report) if latest_weekly_report is not None else 0}")
 
     latest_monthly_report = None
     if monthly_dates:
         key_name = f"monthlyreport-{monthly_dates[0].replace('-', '')}"
         latest_monthly_report = _load_report_from_redis_compat(report_client, key_name)
-        logger.info(f"CACHE_REPORTS_JOB: Loaded latest monthly report for key '{key_name}'. Content is None: {latest_monthly_report is None}")
+        logger.info(f"CACHE_REPORTS_JOB: Loaded monthly report for key '{key_name}'. Type: {type(latest_monthly_report)}, Length: {len(latest_monthly_report) if latest_monthly_report is not None else 0}")
 
     reports_page_data = {
         # json.dumps는 python 객체를 string으로 직렬화합니다.
