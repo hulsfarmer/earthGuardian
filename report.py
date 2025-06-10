@@ -3,6 +3,7 @@
 import os
 import redis
 import pickle
+import re # 정규표현식 모듈 추가
 import datetime
 from flask import Blueprint, render_template, request, jsonify
 import logging
@@ -21,12 +22,34 @@ def get_redis_client():
     return redis.StrictRedis.from_url(redis_url, decode_responses=True)
 
 
+def linkify(text):
+    """
+    텍스트 내의 URL을 찾아서 <a> 태그로 변환하고, 줄바꿈을 <br>로 변경합니다.
+    """
+    # URL을 찾기 위한 정규표현식
+    # http/https뿐만 아니라 www. 로 시작하는 주소도 링크로 변환합니다.
+    url_pattern = re.compile(r'((?:https?://|www\.)[^\s<]+)')
+    
+    def add_protocol(match):
+        url = match.group(1)
+        if url.startswith('www.'):
+            return f'http://{url}'
+        return url
+
+    # URL에 <a> 태그 추가, target="_blank"로 새 창에서 열기
+    # URL이 아닌 텍스트는 그대로 유지됩니다.
+    linked_text = url_pattern.sub(lambda m: f'<a href="{add_protocol(m)}" target="_blank" class="text-blue-500 hover:text-blue-700">{m.group(1)}</a>', text)
+    
+    # 마지막으로 줄바꿈 처리
+    return linked_text.replace('\n', '<br>')
+
+
 def load_report_from_redis(key_name):
     """
     Redis에서 저장된 리포트를 읽어 옵니다.
-    - pickle 직렬화된 경우: pickle.loads
-    - JSON 형태일 경우: json.loads
-    - 그 외 단순 텍스트라면 줄바꿈을 <br>로 변환하여 반환
+    - pickle 직렬화된 경우: pickle.loads 후 linkify 처리
+    - JSON 형태일 경우: json.loads 후 linkify 처리
+    - 그 외 단순 텍스트라면 linkify 처리
     """
     client = get_redis_client()
     raw = client.get(key_name)
@@ -40,19 +63,23 @@ def load_report_from_redis(key_name):
 
     # 1) pickle 시도
     try:
-        return pickle.loads(raw)
+        data = pickle.loads(raw)
+        # pickle로 로드된 데이터가 문자열인 경우에만 linkify 적용
+        return linkify(data) if isinstance(data, str) else data
     except Exception:
         pass
 
     # 2) JSON 시도
     try:
         import json
-        return json.loads(text)
+        data = json.loads(text)
+        # JSON으로 로드된 데이터가 문자열인 경우에만 linkify 적용
+        return linkify(data) if isinstance(data, str) else data
     except Exception:
         pass
 
-    # 3) 단순 텍스트: 줄바꿈을 <br>로 변환하여 반환
-    return text.replace('\n', '<br>')
+    # 3) 단순 텍스트: linkify를 사용하여 URL 변환 및 줄바꿈 처리
+    return linkify(text)
 
 
 @reports_bp.route('/')
