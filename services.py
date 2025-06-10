@@ -247,6 +247,7 @@ def update_reports_cache():
         """지정된 prefix를 가진 모든 키에서 날짜를 추출합니다."""
         # report_client는 bytes를 반환하므로 decode가 필요합니다.
         keys = sorted(report_client.keys(f"{prefix}*"), reverse=True)
+        logger.info(f"CACHE_REPORTS_JOB: Found {len(keys)} keys for prefix '{prefix}'. Sample: {[k.decode('utf-8') for k in keys[:3]]}")
         dates = []
         for k in keys:
             date_part = k.decode('utf-8')[len(prefix):]
@@ -263,16 +264,19 @@ def update_reports_cache():
         # 키 이름은 utf-8 문자열이어야 합니다.
         key_name = f"dailyreport-{daily_dates[0].replace('-', '')}"
         latest_daily_report = _load_report_from_redis_compat(report_client, key_name)
+        logger.info(f"CACHE_REPORTS_JOB: Loaded latest daily report for key '{key_name}'. Content is None: {latest_daily_report is None}")
 
     latest_weekly_report = None
     if weekly_dates:
         key_name = f"weeklyreport-{weekly_dates[0].replace('-', '')}"
         latest_weekly_report = _load_report_from_redis_compat(report_client, key_name)
+        logger.info(f"CACHE_REPORTS_JOB: Loaded latest weekly report for key '{key_name}'. Content is None: {latest_weekly_report is None}")
 
     latest_monthly_report = None
     if monthly_dates:
         key_name = f"monthlyreport-{monthly_dates[0].replace('-', '')}"
         latest_monthly_report = _load_report_from_redis_compat(report_client, key_name)
+        logger.info(f"CACHE_REPORTS_JOB: Loaded latest monthly report for key '{key_name}'. Content is None: {latest_monthly_report is None}")
 
     reports_page_data = {
         # json.dumps는 python 객체를 string으로 직렬화합니다.
