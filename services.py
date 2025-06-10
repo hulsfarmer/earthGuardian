@@ -316,12 +316,12 @@ def get_cached_reports_data():
         return (None,) * 6
 
     try:
-        daily_dates = json.loads(cached_data.get(b'daily_dates', b'[]'))
-        weekly_dates = json.loads(cached_data.get(b'weekly_dates', b'[]'))
-        monthly_dates = json.loads(cached_data.get(b'monthly_dates', b'[]'))
-        latest_daily_report = json.loads(cached_data.get(b'latest_daily_report', b'null'))
-        latest_weekly_report = json.loads(cached_data.get(b'latest_weekly_report', b'null'))
-        latest_monthly_report = json.loads(cached_data.get(b'latest_monthly_report', b'null'))
+        daily_dates = json.loads(cached_data.get('daily_dates', b'[]'))
+        weekly_dates = json.loads(cached_data.get('weekly_dates', b'[]'))
+        monthly_dates = json.loads(cached_data.get('monthly_dates', b'[]'))
+        latest_daily_report = json.loads(cached_data.get('latest_daily_report', b'null'))
+        latest_weekly_report = json.loads(cached_data.get('latest_weekly_report', b'null'))
+        latest_monthly_report = json.loads(cached_data.get('latest_monthly_report', b'null'))
         
         logger.info(f"GET_CACHED_REPORTS: Parsed data. Daily dates count: {len(daily_dates) if daily_dates is not None else 'None'}. Latest daily is None: {latest_daily_report is None}. Latest weekly is None: {latest_weekly_report is None}. Latest monthly is None: {latest_monthly_report is None}")
 
