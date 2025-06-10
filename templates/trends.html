@@ -23,17 +23,17 @@
         .chart-news-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 1024px) { .chart-news-grid { grid-template-columns: 1fr 1fr; } }
     </style>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5708038591832731"
+         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5708038591832731"
         crossorigin="anonymous"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGT3YHYT01"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-    
-      gtag('config', 'G-YGT3YHYT01');
-    </script>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-YGT3YHYT01"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        
+          gtag('config', 'G-YGT3YHYT01');
+        </script>
 </head>
 <body class="bg-gray-100">
     <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
@@ -133,8 +133,8 @@
             container.innerHTML = '';
             if (!newsItems || newsItems.length === 0) {
                 container.innerHTML = '<p class="text-gray-500 p-4 text-center">No related news found.</p>';
-                return;
-            }
+                    return;
+                }
             newsItems.forEach(news => {
                 const newsEl = document.createElement('div');
                 newsEl.className = 'news-item';
@@ -160,7 +160,7 @@
                 }
             });
         }
-        
+
         function updateButtonState(period) {
             const weeklyBtn = document.getElementById('weeklyBtn');
             const monthlyBtn = document.getElementById('monthlyBtn');
@@ -204,7 +204,7 @@
                 renderNewsList('sourceNewsList', trendData.sample_news.filter(n => n.source === source));
             });
             renderNewsList('sourceNewsList', initialNews);
-        }
+                        }
 
         function renderCategoryChart(initialNews) {
             createOrUpdateChart('categoryChart', 'pie', {
@@ -215,7 +215,7 @@
                 renderNewsList('categoryNewsList', trendData.sample_news.filter(n => n.category === category));
             });
             renderNewsList('categoryNewsList', initialNews);
-        }
+                        }
         
         function renderCountryChart(initialNews) {
             const container = document.getElementById('countryChartContainer');
@@ -224,8 +224,8 @@
                 container.innerHTML = '<div class="flex h-full items-center justify-center text-gray-500">No country data available.</div>';
                 renderNewsList('countryNewsList', []);
                 if(charts['countryChart']) { charts['countryChart'].destroy(); delete charts['countryChart']; }
-                return;
-            }
+                    return;
+                }
             container.innerHTML = '<canvas id="countryChart"></canvas>';
             createOrUpdateChart('countryChart', 'doughnut', {
                 labels: countryData.map(d => d.country),
@@ -235,7 +235,7 @@
                 renderNewsList('countryNewsList', trendData.sample_news.filter(n => n.country === country));
             });
             renderNewsList('countryNewsList', initialNews);
-        }
+            }
 
         document.addEventListener('DOMContentLoaded', () => loadTrends('weekly'));
     </script>

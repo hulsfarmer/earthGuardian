@@ -1,7 +1,8 @@
-from flask import Flask, send_from_directory, render_template
+from flask import Flask, send_from_directory, render_template, jsonify
 import logging
 import os
 import atexit
+import redis
 
 # 공용 확장 모듈과 서비스 로직을 가져옵니다.
 from extensions import redis_client, scheduler
@@ -26,6 +27,40 @@ def create_app():
     app.register_blueprint(trends_bp)
     app.register_blueprint(reports_bp) # url_prefix='/reports'가 이미 설정되어 있습니다.
 
+    # 임시 진단용 라우트
+    @app.route('/debug/redis-reports')
+    def debug_redis_reports():
+        logger = app.logger
+        logger.info("Starting Redis report key debug check.")
+        
+        try:
+            redis_url = os.getenv('REDIS_URL')
+            if not redis_url:
+                return jsonify({"error": "REDIS_URL not set."}), 500
+            
+            # bytes를 직접 다루기 위해 decode_responses=False로 설정
+            client = redis.StrictRedis.from_url(redis_url, decode_responses=False)
+            client.ping()
+            logger.info("Successfully connected to Redis for debug check.")
+        except Exception as e:
+            logger.error(f"DEBUG: Could not connect to Redis: {e}")
+            return jsonify({"error": f"Could not connect to Redis: {e}"}), 500
+        
+        found_keys = {}
+        try:
+            for prefix in ["dailyreport-", "weeklyreport-", "monthlyreport-"]:
+                # 키(bytes)를 utf-8로 디코딩하여 JSON으로 반환
+                keys = [k.decode('utf-8') for k in client.keys(f"{prefix}*")]
+                found_keys[prefix] = {
+                    "count": len(keys),
+                    "keys": keys[:20] # 샘플로 20개만 표시
+                }
+            logger.info(f"DEBUG: Found keys: {found_keys}")
+            return jsonify(found_keys)
+        except Exception as e:
+            logger.error(f"DEBUG: Error while scanning keys: {e}")
+            return jsonify({"error": f"Error while scanning keys: {e}"}), 500
+
     # 애플리케이션 컨텍스트 내에서 초기 캐시 업데이트를 직접 실행
     with app.app_context():
         try:
@@ -47,7 +82,7 @@ def create_app():
                 replace_existing=True
             )
             app.logger.info("Scheduled news cache update job (every 30 minutes).")
-        
+
         if not scheduler.get_job('update_reports_cache'):
             scheduler.add_job(
                 func=update_reports_cache,
@@ -91,17 +126,16 @@ def create_app():
     def about():
         return render_template('about_us.html')
 
+    if not scheduler.running:
+        scheduler.start()
+        # 애플리케이션 종료 시 스케줄러가 안전하게 종료되도록 등록
+        atexit.register(lambda: scheduler.shutdown())
+        app.logger.info("APScheduler started.")
+
     return app
 
 # Gunicorn이 찾을 수 있도록 전역 스코프에서 app 객체 생성
 app = create_app()
 
 if __name__ == '__main__':
-    # 로컬에서 실행 시 스케줄러 시작
-    if scheduler.state != 1: # Not running
-        scheduler.start()
-        # 애플리케이션 종료 시 스케줄러가 안전하게 종료되도록 등록
-        atexit.register(lambda: scheduler.shutdown())
-        app.logger.info("APScheduler started.")
-    
     app.run(debug=True, host='0.0.0.0', port=5001)
