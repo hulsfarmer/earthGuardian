@@ -26,25 +26,20 @@ def linkify(text):
     """
     텍스트 내의 URL을 찾아서 <a> 태그로 변환하고, 줄바꿈을 <br>로 변경합니다.
     """
+    if not isinstance(text, str):
+        return text
+
     # URL을 찾기 위한 정규표현식
-    # http/https뿐만 아니라 www. 로 시작하는 주소도 링크로 변환합니다.
-    # URL 끝에 있는 괄호나 마침표는 제외합니다.
-    # 리스트 형식(- 로 시작하는)의 URL도 처리합니다.
-    url_pattern = re.compile(r'(?:^|\s)(?:- )?((?:https?://|www\.)[^\s<]+?)(?:\)|\.|$)(?=\s|$)')
+    # http/https로 시작하는 URL을 찾습니다.
+    url_pattern = re.compile(r'(https?://[^\s<]+)')
     
-    def add_protocol(match):
-        url = match.group(1)
-        if url.startswith('www.'):
-            return f'http://{url}'
-        return url
-
     def replace_url(match):
-        prefix = match.group(0)[:-len(match.group(1))]  # URL 앞의 공백이나 '- ' 등을 보존
         url = match.group(1)
-        return f'{prefix}<a href="{add_protocol(match)}" target="_blank" class="text-blue-500 hover:text-blue-700">{url}</a>'
+        # URL 끝에 있는 괄호나 마침표 제거
+        url = url.rstrip(').')
+        return f'<a href="{url}" target="_blank" class="text-blue-500 hover:text-blue-700">{url}</a>'
 
-    # URL에 <a> 태그 추가, target="_blank"로 새 창에서 열기
-    # URL이 아닌 텍스트는 그대로 유지됩니다.
+    # URL에 <a> 태그 추가
     linked_text = url_pattern.sub(replace_url, text)
     
     # 마지막으로 줄바꿈 처리
