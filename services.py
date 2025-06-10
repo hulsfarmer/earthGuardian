@@ -10,6 +10,7 @@ from nltk.corpus import stopwords
 import nltk
 import redis
 import os
+import pickle
 
 from extensions import redis_client
 
@@ -187,6 +188,48 @@ def get_cached_trends_data(period='weekly'):
     
     return json.loads(cached_trends)
 
+def _get_dedicated_redis_client():
+    """리포트 로딩을 위한 전용 Redis 클라이언트를 생성합니다."""
+    try:
+        # report.py의 load_report_from_redis와 호환되도록 decode_responses=False로 설정
+        return redis.StrictRedis.from_url(os.getenv('REDIS_URL'), decode_responses=False)
+    except Exception as e:
+        logger.error(f"Error creating dedicated Redis client for reports: {e}")
+        return None
+
+def _load_report_from_redis_compat(client, key_name):
+    """
+    report.py의 load_report_from_redis와 호환되는 로직.
+    다양한 포맷(pickle, json, text)을 처리합니다.
+    """
+    if not client: return None
+    raw = client.get(key_name)
+    if not raw: return None
+
+    # 1) pickle 시도
+    try:
+        # pickle은 bytes 객체를 필요로 하므로 raw를 그대로 사용
+        return pickle.loads(raw)
+    except Exception:
+        pass
+
+    # decode는 pickle 시도 후 한 번만 수행
+    try:
+        text = raw.decode('utf-8')
+    except UnicodeDecodeError:
+        logger.warning(f"Could not decode key {key_name} as utf-8. Skipping JSON/text parsing.")
+        return None # 또는 다른 대체 텍스트
+
+    # 2) JSON 시도
+    try:
+        import json
+        return json.loads(text)
+    except Exception:
+        pass
+
+    # 3) 단순 텍스트: 줄바꿈을 <br>로 변환하여 반환
+    return text.replace('\\n', '<br>')
+
 def update_reports_cache():
     """Reports 페이지에 필요한 데이터를 미리 계산하여 캐시에 저장합니다."""
     if not redis_client:
@@ -194,22 +237,15 @@ def update_reports_cache():
         return
 
     logger.info("CACHE_REPORTS_JOB: Starting reports cache update.")
-
-    # report.py에서 사용하던 방식과 동일한 Redis 클라이언트를 생성하여 일관성 보장
-    def _get_report_redis_client():
-        try:
-            # decode_responses=False로 설정하여 byte를 직접 다룹니다.
-            return redis.StrictRedis.from_url(os.getenv('REDIS_URL'), decode_responses=False)
-        except Exception:
-            return None
-
-    report_client = _get_report_redis_client()
+    
+    report_client = _get_dedicated_redis_client()
     if not report_client:
-        logger.error("CACHE_REPORTS_JOB: Could not create a dedicated redis client for reports.")
+        logger.error("CACHE_REPORTS_JOB: Could not create dedicated redis client for reports.")
         return
 
     def _get_all_dates_from_redis(prefix):
         """지정된 prefix를 가진 모든 키에서 날짜를 추출합니다."""
+        # report_client는 bytes를 반환하므로 decode가 필요합니다.
         keys = sorted(report_client.keys(f"{prefix}*"), reverse=True)
         dates = []
         for k in keys:
@@ -218,38 +254,37 @@ def update_reports_cache():
                 dates.append(f"{date_part[0:4]}-{date_part[4:6]}-{date_part[6:8]}")
         return dates
 
-    def _load_report_content(key):
-        """Redis에서 리포트 내용을 로드합니다."""
-        raw = report_client.get(key)
-        if not raw: return None
-        # 간단한 텍스트 처리만 가정합니다. 필요시 load_report_from_redis의 복잡한 로직 추가.
-        return raw.decode('utf-8').replace('\\n', '<br>')
-
     daily_dates = _get_all_dates_from_redis("dailyreport-")
     weekly_dates = _get_all_dates_from_redis("weeklyreport-")
     monthly_dates = _get_all_dates_from_redis("monthlyreport-")
 
     latest_daily_report = None
     if daily_dates:
-        latest_daily_report = _load_report_content(f"dailyreport-{daily_dates[0].replace('-', '')}")
+        # 키 이름은 utf-8 문자열이어야 합니다.
+        key_name = f"dailyreport-{daily_dates[0].replace('-', '')}"
+        latest_daily_report = _load_report_from_redis_compat(report_client, key_name)
 
     latest_weekly_report = None
     if weekly_dates:
-        latest_weekly_report = _load_report_content(f"weeklyreport-{weekly_dates[0].replace('-', '')}")
+        key_name = f"weeklyreport-{weekly_dates[0].replace('-', '')}"
+        latest_weekly_report = _load_report_from_redis_compat(report_client, key_name)
 
     latest_monthly_report = None
     if monthly_dates:
-        latest_monthly_report = _load_report_content(f"monthlyreport-{monthly_dates[0].replace('-', '')}")
+        key_name = f"monthlyreport-{monthly_dates[0].replace('-', '')}"
+        latest_monthly_report = _load_report_from_redis_compat(report_client, key_name)
 
     reports_page_data = {
+        # json.dumps는 python 객체를 string으로 직렬화합니다.
         "daily_dates": json.dumps(daily_dates),
         "weekly_dates": json.dumps(weekly_dates),
         "monthly_dates": json.dumps(monthly_dates),
-        "latest_daily_report": json.dumps(latest_daily_report),
-        "latest_weekly_report": json.dumps(latest_weekly_report),
-        "latest_monthly_report": json.dumps(latest_monthly_report)
+        "latest_daily_report": json.dumps(latest_daily_report, default=str),
+        "latest_weekly_report": json.dumps(latest_weekly_report, default=str),
+        "latest_monthly_report": json.dumps(latest_monthly_report, default=str)
     }
     
+    # hmset을 사용할 때는 value가 string이어야 합니다.
     redis_client.hmset('cache:reports_page', reports_page_data)
     logger.info("CACHE_REPORTS_JOB: Finished reports cache update.")
 
