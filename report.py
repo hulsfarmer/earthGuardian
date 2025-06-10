@@ -29,7 +29,8 @@ def linkify(text):
     # URL을 찾기 위한 정규표현식
     # http/https뿐만 아니라 www. 로 시작하는 주소도 링크로 변환합니다.
     # URL 끝에 있는 괄호나 마침표는 제외합니다.
-    url_pattern = re.compile(r'((?:https?://|www\.)[^\s<]+?)(?:\)|\.|$)(?=\s|$)')
+    # 리스트 형식(- 로 시작하는)의 URL도 처리합니다.
+    url_pattern = re.compile(r'(?:^|\s)(?:- )?((?:https?://|www\.)[^\s<]+?)(?:\)|\.|$)(?=\s|$)')
     
     def add_protocol(match):
         url = match.group(1)
@@ -37,9 +38,14 @@ def linkify(text):
             return f'http://{url}'
         return url
 
+    def replace_url(match):
+        prefix = match.group(0)[:-len(match.group(1))]  # URL 앞의 공백이나 '- ' 등을 보존
+        url = match.group(1)
+        return f'{prefix}<a href="{add_protocol(match)}" target="_blank" class="text-blue-500 hover:text-blue-700">{url}</a>'
+
     # URL에 <a> 태그 추가, target="_blank"로 새 창에서 열기
     # URL이 아닌 텍스트는 그대로 유지됩니다.
-    linked_text = url_pattern.sub(lambda m: f'<a href="{add_protocol(m)}" target="_blank" class="text-blue-500 hover:text-blue-700">{m.group(1)}</a>', text)
+    linked_text = url_pattern.sub(replace_url, text)
     
     # 마지막으로 줄바꿈 처리
     return linked_text.replace('\n', '<br>')
@@ -103,6 +109,14 @@ def reports_index():
     if all_daily_dates is None: all_daily_dates = []
     if all_weekly_dates is None: all_weekly_dates = []
     if all_monthly_dates is None: all_monthly_dates = []
+
+    # 최신 리포트 데이터에 링크 변환 적용
+    if latest_daily_report and isinstance(latest_daily_report, str):
+        latest_daily_report = linkify(latest_daily_report)
+    if latest_weekly_report and isinstance(latest_weekly_report, str):
+        latest_weekly_report = linkify(latest_weekly_report)
+    if latest_monthly_report and isinstance(latest_monthly_report, str):
+        latest_monthly_report = linkify(latest_monthly_report)
 
     # 페이지네이션 처리
     daily_start = (daily_page - 1) * per_page
