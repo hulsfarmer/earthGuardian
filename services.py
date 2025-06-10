@@ -298,6 +298,7 @@ def get_cached_reports_data():
     
     try:
         cached_data = redis_client.hgetall('cache:reports_page')
+        logger.info(f"GET_CACHED_REPORTS: Fetched raw cache data. Is None: {cached_data is None}")
     except redis.exceptions.ResponseError as e:
         if "WRONGTYPE" in str(e):
             logger.warning(
@@ -310,7 +311,9 @@ def get_cached_reports_data():
             logger.error(f"An unexpected Redis error occurred in get_cached_reports_data: {e}")
             raise
 
-    if not cached_data: return (None,) * 6
+    if not cached_data: 
+        logger.warning("GET_CACHED_REPORTS: No cached data found, returning empty tuple.")
+        return (None,) * 6
 
     try:
         daily_dates = json.loads(cached_data.get(b'daily_dates', b'[]'))
@@ -319,7 +322,10 @@ def get_cached_reports_data():
         latest_daily_report = json.loads(cached_data.get(b'latest_daily_report', b'null'))
         latest_weekly_report = json.loads(cached_data.get(b'latest_weekly_report', b'null'))
         latest_monthly_report = json.loads(cached_data.get(b'latest_monthly_report', b'null'))
+        
+        logger.info(f"GET_CACHED_REPORTS: Parsed data. Daily dates count: {len(daily_dates) if daily_dates is not None else 'None'}. Latest daily is None: {latest_daily_report is None}. Latest weekly is None: {latest_weekly_report is None}. Latest monthly is None: {latest_monthly_report is None}")
+
         return daily_dates, weekly_dates, monthly_dates, latest_daily_report, latest_weekly_report, latest_monthly_report
     except (json.JSONDecodeError, TypeError) as e:
-        logger.error(f"Error decoding cached reports data: {e}")
+        logger.error(f"GET_CACHED_REPORTS: Error decoding cached reports data: {e}")
         return (None,) * 6 
