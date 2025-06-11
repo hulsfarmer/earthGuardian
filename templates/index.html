@@ -285,9 +285,10 @@
                                             />
                                         {% endif %}
                                         <div class="p-4 md:p-6">
-                                            <div class="flex justify-between items-start mb-2">
-                                                <h3 class="text-lg md:text-xl font-semibold">
-                                                    <!-- target="_blank" 제거 -->
+                                            <!-- 뉴스 소스가 맨 위, 그 아래 제목이 오도록 구조 변경 -->
+                                            <div class="mb-2 flex flex-col items-end">
+                                                <span class="text-xs md:text-sm text-gray-500 mb-1 self-end">{{ news.source }}</span>
+                                                <h3 class="text-lg md:text-xl font-semibold w-full text-left">
                                                     <a
                                                         href="{{ news.link }}"
                                                         class="text-green-600 hover:text-green-800"
@@ -295,10 +296,6 @@
                                                         {{ news.title }}
                                                     </a>
                                                 </h3>
-                                                <span
-                                                    class="text-xs md:text-sm text-gray-500 ml-2"
-                                                    >{{ news.source }}</span
-                                                >
                                             </div>
                                             <p class="text-xs md:text-sm text-gray-600 mb-3">
                                                 {{ news.published }}
