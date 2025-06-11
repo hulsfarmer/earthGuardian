@@ -9,6 +9,7 @@ from flask import Blueprint, render_template, request, jsonify
 import logging
 from datetime import timezone
 
+
 # 공용 redis_client와 scheduler를 import합니다.
 from extensions import redis_client, scheduler
 from services import get_cached_reports_data
@@ -21,30 +22,29 @@ def get_redis_client():
     redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     return redis.StrictRedis.from_url(redis_url, decode_responses=True)
 
-
 def linkify(text):
     """
     텍스트 내의 URL을 찾아서 <a> 태그로 변환하고, 줄바꿈을 <br>로 변경합니다.
+    괄호나 마침표가 URL 끝에 붙어 있으면 링크 밖으로 분리합니다.
     """
     if not isinstance(text, str):
         return text
 
-    # URL을 찾기 위한 정규표현식
-    # http/https로 시작하는 URL을 찾고, 뒤에 괄호나 마침표가 있는 경우도 포함
-    url_pattern = re.compile(r'(https?://[^\s<]+)([).])?')
-    
+    # URL 정규표현식 (괄호나 마침표는 URL에 포함되지 않도록 함)
+    url_pattern = re.compile(r'(https?://[^\s<>()]+)([).,!?]?)')
+
     def replace_url(match):
         url = match.group(1)
-        punctuation = match.group(2) or ''
-        # URL 앞뒤에 공백 추가 (뒤의 공백은 &nbsp;를 사용하여 확실하게 표시)
-        # 괄호나 마침표 앞에도 공백 추가
-        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">&nbsp;{url}&nbsp;</a> {punctuation}'
+        punctuation = match.group(2)
+        # URL을 링크로 변환하고, 붙어있던 문장 부호는 링크 바깥으로 둠
+        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">{url}</a>{punctuation}'
 
-    # URL에 <a> 태그 추가
+    # URL 변환
     linked_text = url_pattern.sub(replace_url, text)
-    
-    # 마지막으로 줄바꿈 처리
+
+    # 줄바꿈 <br> 처리
     return linked_text.replace('\n', '<br>')
+
 
 
 def load_report_from_redis(key_name):
