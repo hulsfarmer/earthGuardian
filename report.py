@@ -30,13 +30,14 @@ def linkify(text):
         return text
 
     # URL을 찾기 위한 정규표현식
-    # http/https로 시작하는 URL을 찾습니다.
-    url_pattern = re.compile(r'(https?://[^\s<]+)')
+    # http/https로 시작하는 URL을 찾고, 뒤에 괄호나 마침표가 있는 경우도 포함
+    url_pattern = re.compile(r'(https?://[^\s<]+)([).])?')
     
     def replace_url(match):
         url = match.group(1)
+        punctuation = match.group(2) or ''
         # URL 앞뒤에 공백 추가 (뒤의 공백은 &nbsp;를 사용하여 확실하게 표시)
-        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">&nbsp;{url}&nbsp;</a>'
+        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">&nbsp;{url}&nbsp;</a>{punctuation}'
 
     # URL에 <a> 태그 추가
     linked_text = url_pattern.sub(replace_url, text)
