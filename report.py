@@ -37,7 +37,8 @@ def linkify(text):
         url = match.group(1)
         punctuation = match.group(2) or ''
         # URL 앞뒤에 공백 추가 (뒤의 공백은 &nbsp;를 사용하여 확실하게 표시)
-        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">&nbsp;{url}&nbsp;</a>{punctuation}'
+        # 괄호나 마침표 앞에도 공백 추가
+        return f'<a href="{url}" class="text-blue-500 hover:text-blue-700">&nbsp;{url}&nbsp;</a> {punctuation}'
 
     # URL에 <a> 태그 추가
     linked_text = url_pattern.sub(replace_url, text)
