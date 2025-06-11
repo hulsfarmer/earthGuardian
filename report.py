@@ -35,9 +35,8 @@ def linkify(text):
     
     def replace_url(match):
         url = match.group(1)
-        # URL 끝에 있는 괄호나 마침표 제거
-        url = url.rstrip(').')
-        return f'<a href="{url}" target="_blank" class="text-blue-500 hover:text-blue-700">{url}</a>'
+        # URL 앞뒤에 공백 추가
+        return f'<a href="{url}" target="_blank" class="text-blue-500 hover:text-blue-700"> {url} </a>'
 
     # URL에 <a> 태그 추가
     linked_text = url_pattern.sub(replace_url, text)
