@@ -128,13 +128,16 @@
         let trendData = {};
         const chartColors = ['#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722', '#F44336', '#E91E63', '#9C27B0'];
 
-        function renderNewsList(containerId, newsItems) {
+        function renderNewsList(containerId, newsItems, title) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
+            if (title) {
+                container.innerHTML += `<div class="font-bold text-green-700 mb-2">${title}</div>`;
+            }
             if (!newsItems || newsItems.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 p-4 text-center">No related news found.</p>';
-                    return;
-                }
+                container.innerHTML += '<p class="text-gray-500 p-4 text-center">No related news found.</p>';
+                return;
+            }
             newsItems.forEach(news => {
                 const newsEl = document.createElement('div');
                 newsEl.className = 'news-item';
@@ -190,9 +193,9 @@
             }, index => {
                 const keyword = trendData.top_keywords[index].keyword.toLowerCase();
                 const filtered = trendData.sample_news.filter(n => (n.title + (n.summary||'')).toLowerCase().includes(keyword));
-                renderNewsList('keywordNewsList', filtered);
+                renderNewsList('keywordNewsList', filtered, `키워드: ${trendData.top_keywords[index].keyword}`);
             });
-            renderNewsList('keywordNewsList', initialNews);
+            renderNewsList('keywordNewsList', initialNews, '전체 키워드 관련 뉴스');
         }
 
         function renderSourceChart(initialNews) {
@@ -201,10 +204,10 @@
                 datasets: [{ data: trendData.source_distribution.map(d => d.count), backgroundColor: chartColors }]
             }, index => {
                 const source = trendData.source_distribution[index].source;
-                renderNewsList('sourceNewsList', trendData.sample_news.filter(n => n.source === source));
+                renderNewsList('sourceNewsList', trendData.sample_news.filter(n => n.source === source), `소스: ${source}`);
             });
-            renderNewsList('sourceNewsList', initialNews);
-                        }
+            renderNewsList('sourceNewsList', initialNews, '전체 소스 관련 뉴스');
+        }
 
         function renderCategoryChart(initialNews) {
             createOrUpdateChart('categoryChart', 'pie', {
@@ -212,30 +215,30 @@
                 datasets: [{ data: trendData.category_distribution.map(d => d.count), backgroundColor: chartColors }]
             }, index => {
                 const category = trendData.category_distribution[index].category;
-                renderNewsList('categoryNewsList', trendData.sample_news.filter(n => n.category === category));
+                renderNewsList('categoryNewsList', trendData.sample_news.filter(n => n.category === category), `카테고리: ${category}`);
             });
-            renderNewsList('categoryNewsList', initialNews);
-                        }
+            renderNewsList('categoryNewsList', initialNews, '전체 카테고리 관련 뉴스');
+        }
         
         function renderCountryChart(initialNews) {
             const container = document.getElementById('countryChartContainer');
             const countryData = trendData.country_distribution;
             if (!countryData || countryData.length === 0) {
                 container.innerHTML = '<div class="flex h-full items-center justify-center text-gray-500">No country data available.</div>';
-                renderNewsList('countryNewsList', []);
+                renderNewsList('countryNewsList', [], '국가별 관련 뉴스');
                 if(charts['countryChart']) { charts['countryChart'].destroy(); delete charts['countryChart']; }
-                    return;
-                }
+                return;
+            }
             container.innerHTML = '<canvas id="countryChart"></canvas>';
             createOrUpdateChart('countryChart', 'doughnut', {
                 labels: countryData.map(d => d.country),
                 datasets: [{ data: countryData.map(d => d.count), backgroundColor: chartColors }]
             }, index => {
                 const country = countryData[index].country;
-                renderNewsList('countryNewsList', trendData.sample_news.filter(n => n.country === country));
+                renderNewsList('countryNewsList', trendData.sample_news.filter(n => n.country === country), `국가: ${country}`);
             });
-            renderNewsList('countryNewsList', initialNews);
-            }
+            renderNewsList('countryNewsList', initialNews, '전체 국가 관련 뉴스');
+        }
 
         document.addEventListener('DOMContentLoaded', () => loadTrends('weekly'));
     </script>
