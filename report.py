@@ -94,9 +94,9 @@ def reports_index():
     daily_page = request.args.get('daily_page', 1, type=int)
     weekly_page = request.args.get('weekly_page', 1, type=int)
     monthly_page = request.args.get('monthly_page', 1, type=int)
+    weekly_date = request.args.get('weekly_date')
     per_page = 20
 
-    # 캐시에서 모든 데이터를 한 번에 가져옵니다.
     (
         all_daily_dates, all_weekly_dates, all_monthly_dates,
         latest_daily_report, latest_weekly_report, latest_monthly_report
@@ -129,7 +129,14 @@ def reports_index():
     monthly_end = monthly_start + per_page
     monthly_dates_paginated = all_monthly_dates[monthly_start:monthly_end]
     monthly_total_pages = (len(all_monthly_dates) + per_page - 1) // per_page
-    
+
+    # 만약 weekly_date 파라미터가 있으면 해당 날짜의 weekly report를 보여줌
+    selected_weekly_report = None
+    if weekly_date:
+        key_date = weekly_date.replace('-', '')
+        redis_key = f"weeklyreport-{key_date}"
+        selected_weekly_report = load_report_from_redis(redis_key)
+
     return render_template(
         'reports.html',
         daily_dates=daily_dates_paginated,
@@ -142,7 +149,7 @@ def reports_index():
         monthly_page=monthly_page,
         monthly_total_pages=monthly_total_pages,
         daily_latest_report=latest_daily_report,
-        weekly_latest_report=latest_weekly_report,
+        weekly_latest_report=selected_weekly_report if selected_weekly_report else latest_weekly_report,
         monthly_latest_report=latest_monthly_report
     )
 

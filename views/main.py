@@ -4,13 +4,13 @@ import json
 
 from services import get_cached_homepage_data, CATEGORIES
 
-main_bp = Blueprint('main', __name__)
+main_bp = Blueprint('main', __name__, url_prefix='/news')
 logger = logging.getLogger(__name__)
 
 @main_bp.route('/')
 def index():
     """
-    메인 페이지를 렌더링합니다. 캐시된 데이터를 사용하고, 요청된 필터링/정렬을 적용합니다.
+    뉴스 페이지를 렌더링합니다. 캐시된 데이터를 사용하고, 요청된 필터링/정렬을 적용합니다.
     """
     try:
         current_category = request.args.get('category', '')

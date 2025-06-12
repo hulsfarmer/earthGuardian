@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EARTH GUARDIAN - Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f7faf7; }
+        .hero { text-align: center; padding: 3rem 1rem 2rem 1rem; background: #e8f5e9; }
+        .hero-title { font-size: 2.7rem; color: #256029; font-weight: bold; letter-spacing: 2px; }
+        .hero-slogan { font-size: 1.2rem; color: #388e3c; margin-bottom: 1.2rem; }
+        .hero-desc { color: #444; margin-bottom: 2rem; }
+        .hero-btns a { display: inline-block; margin: 0 0.5rem; padding: 0.7rem 1.5rem; border-radius: 6px; font-size: 1.05rem; font-weight: 500; text-decoration: none; transition: background 0.2s; }
+        .hero-btns .report { background: #256029; color: #fff; }
+        .hero-btns .report:hover { background: #388e3c; }
+        .hero-btns .trends { background: #fff; color: #256029; border: 1.5px solid #256029; }
+        .hero-btns .trends:hover { background: #e0f2f1; }
+        .today, .featured, .weekly, .topics, .about { max-width: 700px; margin: 2.5rem auto 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 2rem 1.5rem; }
+        .featured h2, .weekly h2, .today h2, .topics h2, .about h2 { margin-top: 0; color: #256029; }
+        .featured-list { list-style: none; padding: 0; margin: 0; }
+        .featured-list li { margin-bottom: 0.7rem; font-size: 1.08rem; }
+        .featured-list li::before { content: '📰'; margin-right: 0.5rem; }
+        .weekly-card { background: #e8f5e9; border-radius: 8px; padding: 1.2rem 1rem; margin-bottom: 1rem; }
+        .weekly-link { color: #256029; font-weight: bold; text-decoration: underline; }
+        .topics-list { display: flex; flex-wrap: wrap; gap: 1.2rem; justify-content: center; margin: 1rem 0 0 0; padding: 0; list-style: none; }
+        .topics-list li { font-size: 1.1rem; background: #f1f8e9; border-radius: 6px; padding: 0.5rem 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .about { text-align: center; margin-bottom: 2.5rem; }
+        .footer { background: #256029; color: #fff; text-align: center; padding: 1.2rem 0 1.2rem 0; margin-top: 2.5rem; font-size: 1rem; }
+        .footer a { color: #fff; margin: 0 0.7rem; text-decoration: underline; }
+        .footer a:hover { color: #b2dfdb; }
+    </style>
+</head>
+<body>
+    <nav style="text-align:center; margin-top:1rem;">
+        <a href="/">Home</a> |
+        <a href="/news">News</a> |
+        <a href="/trends">Trends</a> |
+        <a href="/reports">Reports</a>
+    </nav>
+    <section class="hero">
+        <div class="hero-title">EARTH GUARDIAN</div>
+        <div class="hero-slogan">&gt; Curated Environmental Reports for a Sustainable Future</div>
+        <div class="hero-desc">Automatically generated daily environmental news summary reports</div>
+        <div class="hero-btns">
+            <a href="/reports" class="report">📄 Read Latest Report</a>
+            <a href="/trends" class="trends">📊 Explore Trends</a>
+        </div>
+    </section>
+    <section class="today">
+        <h2>Today Highlight</h2>
+        {% if latest_daily_date and latest_daily_report %}
+            <div class="weekly-card" style="margin-bottom:1.5rem;">
+                <div style="font-size:1.08rem; margin-bottom:0.5rem;">
+                    {{ latest_daily_date }} – <strong>Daily Environmental Report</strong>
+                </div>
+                <div style="color:#444; margin-bottom:0.5rem;">
+                    {{ latest_daily_report[:200]|safe }}{% if latest_daily_report|length > 200 %}...{% endif %}
+                </div>
+                <a href="/reports?daily_date={{ latest_daily_date }}" class="weekly-link">Read Full Daily Report →</a>
+            </div>
+        {% else %}
+            <div style="color:#888;">No daily report available for today.</div>
+        {% endif %}
+    </section>
+    <section class="weekly">
+        <h2>Weekly Highlight</h2>
+        <div class="weekly-card">
+            {% if latest_weekly_date and latest_weekly_report %}
+                <div style="font-size:1.08rem; margin-bottom:0.5rem;">📆 Weekly Environmental Report: {{ latest_weekly_date }}</div>
+                <div style="color:#444; margin-bottom:0.5rem;">
+                    {{ latest_weekly_report[:200]|safe }}{% if latest_weekly_report|length > 200 %}...{% endif %}
+                </div>
+                <a href="/reports?weekly_date={{ latest_weekly_date }}" class="weekly-link">Read Full Weekly Report →</a>
+            {% else %}
+                <div style="color:#888;">No weekly report available.</div>
+            {% endif %}
+        </div>
+    </section>
+    <section class="featured">
+        <h2>Latest News</h2>
+        <ul class="featured-list">
+            {% if latest_news and latest_news|length > 1 %}
+                {% for news in latest_news[1:5] %}
+                    <li>
+                        <a href="{{ news.link }}">{{ news.published[:10] if news.published else '' }} – "{{ news.title }}"</a>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>No additional news available.</li>
+            {% endif %}
+        </ul>
+    </section>
+    <section class="topics">
+        <h2>Topics / Categories</h2>
+        <ul class="topics-list">
+            <li>🌿 Climate Change</li>
+            <li>🐾 Biodiversity</li>
+            <li>⚡ Energy</li>
+            <li>🧭 Community</li>
+        </ul>
+    </section>
+    <section class="about">
+        <h2>About Earth Guardian</h2>
+        <div>Data-driven environmental journal for a sustainable planet</div>
+    </section>
+    <footer class="footer">
+        <a href="/contact_us.html">Contact</a> |
+        <a href="/privacy_policy.html">Privacy Policy</a> |
+        <a href="#">Newsletter Signup</a>
+        <div style="margin-top:0.7rem; font-size:0.95rem;">&copy; 2025 Earth Guardian. All rights reserved.</div>
+    </footer>
+</body>
+</html> 

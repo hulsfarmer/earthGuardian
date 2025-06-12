@@ -223,8 +223,10 @@
     <div id="report-content"
          class="bg-white rounded-lg shadow-md p-6 text-gray-700"
          style="line-height: 1.8; font-size: 1.05rem;">
-      {# 최신 리포트를 일일 > 주간 > 월간 순으로 우선 표시 #}
-      {% if daily_latest_report %}
+      {# If weekly_date is set, always show weekly_latest_report #}
+      {% if request.args.get('weekly_date') and weekly_latest_report %}
+        {{ weekly_latest_report|safe }}
+      {% elif daily_latest_report %}
         {{ daily_latest_report|safe }}
       {% elif weekly_latest_report %}
         {{ weekly_latest_report|safe }}

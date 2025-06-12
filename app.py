@@ -12,6 +12,7 @@ from services import update_news_cache, update_reports_cache
 from views.main import main_bp
 from views.trends import trends_bp
 from report import reports_bp # reports_bp로 이름이 변경되었습니다.
+from views.home import home_bp
 
 def create_app():
     """
@@ -26,6 +27,7 @@ def create_app():
     app.register_blueprint(main_bp)
     app.register_blueprint(trends_bp)
     app.register_blueprint(reports_bp) # url_prefix='/reports'가 이미 설정되어 있습니다.
+    app.register_blueprint(home_bp)
 
     # 임시 진단용 라우트
     @app.route('/debug/redis-reports')
