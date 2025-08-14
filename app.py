@@ -131,7 +131,7 @@ def get_news():
     for source, feed_url in NEWS_FEEDS.items():
         try:
             logger.info(f"Fetching news from {source}")
-            response = requests.get(feed_url, headers=headers, timeout=10)
+            response = requests.get(feed_url, headers=headers, timeout=30)  # 타임아웃 증가
             response.raise_for_status()
             
             feed = feedparser.parse(response.content)
@@ -210,8 +210,8 @@ def get_news():
     cutoff_date = datetime.now() - timedelta(days=7)
     all_news = [item for item in all_news if parser.parse(item['published']) > cutoff_date]
 
-    # 최대 개수 제한
-    MAX_NEWS_COUNT = 300
+    # 최대 개수 제한 (메모리 사용량 감소)
+    MAX_NEWS_COUNT = 100  # 300 → 100으로 감소
     all_news = all_news[:MAX_NEWS_COUNT]
     
     # 캐시 업데이트
@@ -414,10 +414,15 @@ def collect_and_analyze_news():
     except Exception as e:
         logger.error(f"Error in collect_and_analyze_news: {str(e)}")
 
-# 스케줄러 설정
-scheduler = BackgroundScheduler()
-scheduler.add_job(collect_and_analyze_news, 'interval', minutes=5)
-scheduler.start()
+# 스케줄러 설정 (안정성 향상을 위해 간격 증가)
+try:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(collect_and_analyze_news, 'interval', minutes=30)  # 5분 → 30분으로 변경
+    scheduler.start()
+    logger.info("Background scheduler started successfully")
+except Exception as e:
+    logger.error(f"Failed to start scheduler: {e}")
+    # 스케줄러 없이도 작동하도록
 
 @app.route('/api/trends')
 @cache.cached(timeout=300, query_string=True)  # 5분 캐싱, 쿼리 파라미터 고려
@@ -487,6 +492,16 @@ def environmental_dictionary():
 def carbon_calculator():
     """개인 탄소발자국 계산기 페이지"""
     return render_template('carbon_calculator.html')
+
+@app.route('/privacy')
+def privacy_policy():
+    """개인정보처리방침 페이지"""
+    return render_template('privacy.html')
+
+@app.route('/about')
+def about_us():
+    """소개 페이지"""
+    return render_template('about.html')
 
 @app.route('/api/air-quality')
 def get_air_quality():
