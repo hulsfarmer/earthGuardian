@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Calculator - Earth Guardian</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .calculator-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .calculator-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .result-excellent { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .result-good { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .result-average { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .result-poor { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .step.active {
+            background: #16a34a;
+            color: white;
+            transform: scale(1.1);
+        }
+        .step.completed {
+            background: #22c55e;
+            color: white;
+        }
+        .step.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        .recommendation-card {
+            border-left: 4px solid #16a34a;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="block">
+                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                    <p class="mt-2">Carbon Footprint Calculator</p>
+                </a>
+                <nav class="flex space-x-6">
+                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-newspaper mr-2"></i>
+                        News
+                    </a>
+                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Trends
+                    </a>
+                    <a href="/reports" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        Reports
+                    </a>
+                    <a href="/air-quality" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-wind mr-2"></i>
+                        Air Quality
+                    </a>
+                    <a href="/dictionary" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-book mr-2"></i>
+                        Dictionary
+                    </a>
+                    <a href="/carbon-calculator" class="px-4 py-2 rounded-md bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Calculator
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 소개 섹션 -->
+        <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg p-8 mb-8">
+            <div class="text-center">
+                <i class="fas fa-leaf text-6xl mb-4 opacity-80"></i>
+                <h2 class="text-3xl font-bold mb-4">Calculate Your Carbon Footprint</h2>
+                <p class="text-lg opacity-90 max-w-3xl mx-auto">
+                    Discover your environmental impact and learn how to reduce your carbon footprint. 
+                    Our calculator estimates your annual CO₂ emissions based on your lifestyle choices.
+                </p>
+            </div>
+        </div>
+
+        <!-- 단계 표시기 -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step pending" id="step2">2</div>
+            <div class="step pending" id="step3">3</div>
+            <div class="step pending" id="step4">4</div>
+            <div class="step pending" id="step5">5</div>
+        </div>
+
+        <!-- 계산기 폼 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 입력 섹션 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 교통수단 -->
+                <div class="calculator-card bg-white rounded-lg shadow-md p-6">
+                    <div class="category-icon bg-blue-100 text-blue-600 mb-4">
+                        <i class="fas fa-car text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-4">🚗 Transportation</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Car (km/year)</label>
+                            <input type="number" id="carKm" placeholder="12000" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Car Fuel Type</label>
+                            <select id="carFuel" onchange="calculateFootprint()" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="gasoline">Gasoline</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="electric">Electric</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Public Transport (km/year)</label>
+                            <input type="number" id="publicKm" placeholder="2000" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Flights (hours/year)</label>
+                            <input type="number" id="flightHours" placeholder="20" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 에너지 사용 -->
+                <div class="calculator-card bg-white rounded-lg shadow-md p-6">
+                    <div class="category-icon bg-yellow-100 text-yellow-600 mb-4">
+                        <i class="fas fa-bolt text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-4">⚡ Home Energy</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Electricity (kWh/month)</label>
+                            <input type="number" id="electricity" placeholder="300" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Gas (m³/month)</label>
+                            <input type="number" id="gas" placeholder="50" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Home Size (m²)</label>
+                            <input type="number" id="homeSize" placeholder="100" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Renewable Energy %</label>
+                            <input type="range" id="renewable" min="0" max="100" value="0" 
+                                   class="w-full" oninput="calculateFootprint(); updateRenewableDisplay()">
+                            <div class="text-center text-sm text-gray-600 mt-1">
+                                <span id="renewableDisplay">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 식단 -->
+                <div class="calculator-card bg-white rounded-lg shadow-md p-6">
+                    <div class="category-icon bg-green-100 text-green-600 mb-4">
+                        <i class="fas fa-utensils text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-4">🍽️ Diet & Food</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Diet Type</label>
+                            <select id="dietType" onchange="calculateFootprint()" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="omnivore">Omnivore (everything)</option>
+                                <option value="pescatarian">Pescatarian (fish, no meat)</option>
+                                <option value="vegetarian">Vegetarian (no meat/fish)</option>
+                                <option value="vegan">Vegan (plant-based only)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Local Food %</label>
+                            <input type="range" id="localFood" min="0" max="100" value="50" 
+                                   class="w-full" oninput="calculateFootprint(); updateLocalFoodDisplay()">
+                            <div class="text-center text-sm text-gray-600 mt-1">
+                                <span id="localFoodDisplay">50%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Food Waste (kg/week)</label>
+                            <input type="number" id="foodWaste" placeholder="2" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Dining Out (times/week)</label>
+                            <input type="number" id="diningOut" placeholder="3" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 소비 습관 -->
+                <div class="calculator-card bg-white rounded-lg shadow-md p-6">
+                    <div class="category-icon bg-purple-100 text-purple-600 mb-4">
+                        <i class="fas fa-shopping-bag text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-center mb-4">🛍️ Consumption</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">New Clothes (items/year)</label>
+                            <input type="number" id="clothes" placeholder="20" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Electronics (€/year)</label>
+                            <input type="number" id="electronics" placeholder="500" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                   oninput="calculateFootprint()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Recycling Rate %</label>
+                            <input type="range" id="recycling" min="0" max="100" value="70" 
+                                   class="w-full" oninput="calculateFootprint(); updateRecyclingDisplay()">
+                            <div class="text-center text-sm text-gray-600 mt-1">
+                                <span id="recyclingDisplay">70%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Second-hand Shopping %</label>
+                            <input type="range" id="secondHand" min="0" max="100" value="20" 
+                                   class="w-full" oninput="calculateFootprint(); updateSecondHandDisplay()">
+                            <div class="text-center text-sm text-gray-600 mt-1">
+                                <span id="secondHandDisplay">20%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 계산 버튼 -->
+                <div class="text-center">
+                    <button onclick="calculateFootprint()" 
+                            class="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-lg">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Calculate My Carbon Footprint
+                    </button>
+                </div>
+            </div>
+
+            <!-- 결과 섹션 -->
+            <div class="lg:col-span-1">
+                <!-- 총 결과 -->
+                <div id="totalResult" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-xl font-bold text-center mb-4">Your Annual Carbon Footprint</h3>
+                    <div class="text-center">
+                        <div id="totalCO2" class="text-4xl font-bold text-gray-800 mb-2">0</div>
+                        <div class="text-sm text-gray-600 mb-4">tonnes CO₂e per year</div>
+                        <div id="comparisonText" class="text-sm font-medium p-3 rounded-lg">
+                            Calculate to see your impact
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 카테고리별 분석 -->
+                <div id="categoryBreakdown" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">Breakdown by Category</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">🚗 Transportation</span>
+                            <span id="transportCO2" class="font-medium">0 t</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">⚡ Home Energy</span>
+                            <span id="energyCO2" class="font-medium">0 t</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">🍽️ Food & Diet</span>
+                            <span id="foodCO2" class="font-medium">0 t</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">🛍️ Consumption</span>
+                            <span id="consumptionCO2" class="font-medium">0 t</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 추천사항 -->
+                <div id="recommendations" class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold mb-4">💡 Recommendations</h3>
+                    <div id="recommendationsList">
+                        <p class="text-gray-600 text-sm">Calculate your footprint to get personalized recommendations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 세계 평균 비교 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+            <h3 class="text-xl font-bold mb-4">🌍 Global Comparison</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                <div class="p-4 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600">16.1</div>
+                    <div class="text-sm text-gray-600">USA Average</div>
+                </div>
+                <div class="p-4 bg-orange-50 rounded-lg">
+                    <div class="text-2xl font-bold text-orange-600">8.8</div>
+                    <div class="text-sm text-gray-600">EU Average</div>
+                </div>
+                <div class="p-4 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600">4.6</div>
+                    <div class="text-sm text-gray-600">World Average</div>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">2.0</div>
+                    <div class="text-sm text-gray-600">Paris Agreement Target</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Earth Guardian. Take action for our planet's future.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 슬라이더 디스플레이 업데이트
+        function updateRenewableDisplay() {
+            document.getElementById('renewableDisplay').textContent = document.getElementById('renewable').value + '%';
+        }
+
+        function updateLocalFoodDisplay() {
+            document.getElementById('localFoodDisplay').textContent = document.getElementById('localFood').value + '%';
+        }
+
+        function updateRecyclingDisplay() {
+            document.getElementById('recyclingDisplay').textContent = document.getElementById('recycling').value + '%';
+        }
+
+        function updateSecondHandDisplay() {
+            document.getElementById('secondHandDisplay').textContent = document.getElementById('secondHand').value + '%';
+        }
+
+        function calculateFootprint() {
+            // 입력값 가져오기
+            const carKm = parseFloat(document.getElementById('carKm').value) || 0;
+            const carFuel = document.getElementById('carFuel').value;
+            const publicKm = parseFloat(document.getElementById('publicKm').value) || 0;
+            const flightHours = parseFloat(document.getElementById('flightHours').value) || 0;
+            
+            const electricity = parseFloat(document.getElementById('electricity').value) || 0;
+            const gas = parseFloat(document.getElementById('gas').value) || 0;
+            const homeSize = parseFloat(document.getElementById('homeSize').value) || 0;
+            const renewable = parseFloat(document.getElementById('renewable').value) || 0;
+            
+            const dietType = document.getElementById('dietType').value;
+            const localFood = parseFloat(document.getElementById('localFood').value) || 50;
+            const foodWaste = parseFloat(document.getElementById('foodWaste').value) || 0;
+            const diningOut = parseFloat(document.getElementById('diningOut').value) || 0;
+            
+            const clothes = parseFloat(document.getElementById('clothes').value) || 0;
+            const electronics = parseFloat(document.getElementById('electronics').value) || 0;
+            const recycling = parseFloat(document.getElementById('recycling').value) || 70;
+            const secondHand = parseFloat(document.getElementById('secondHand').value) || 20;
+
+            // 배출계수 (kg CO2e)
+            const emissionFactors = {
+                car: {
+                    gasoline: 0.21,  // kg CO2e/km
+                    diesel: 0.25,
+                    hybrid: 0.12,
+                    electric: 0.05
+                },
+                publicTransport: 0.08,  // kg CO2e/km
+                flight: 250,  // kg CO2e/hour
+                electricity: 0.5,  // kg CO2e/kWh
+                gas: 2.0,  // kg CO2e/m³
+                diet: {
+                    omnivore: 1500,  // kg CO2e/year
+                    pescatarian: 1200,
+                    vegetarian: 900,
+                    vegan: 600
+                },
+                clothes: 10,  // kg CO2e/item
+                electronics: 0.5  // kg CO2e/euro
+            };
+
+            // 계산
+            let transportCO2 = 0;
+            transportCO2 += carKm * emissionFactors.car[carFuel];
+            transportCO2 += publicKm * emissionFactors.publicTransport;
+            transportCO2 += flightHours * emissionFactors.flight;
+
+            let energyCO2 = 0;
+            energyCO2 += (electricity * 12 * emissionFactors.electricity) * (1 - renewable/100);
+            energyCO2 += gas * 12 * emissionFactors.gas;
+            energyCO2 += homeSize * 10; // 기본 건물 배출
+
+            let foodCO2 = emissionFactors.diet[dietType];
+            foodCO2 *= (1 + (100 - localFood) / 200); // 로컬푸드 보정
+            foodCO2 += foodWaste * 52 * 2; // 음식물쓰레기
+            foodCO2 += diningOut * 52 * 5; // 외식
+
+            let consumptionCO2 = 0;
+            consumptionCO2 += clothes * emissionFactors.clothes * (1 - secondHand/100);
+            consumptionCO2 += electronics * emissionFactors.electronics;
+            consumptionCO2 *= (1 - recycling/200); // 재활용 보정
+
+            // 톤 단위로 변환
+            transportCO2 = transportCO2 / 1000;
+            energyCO2 = energyCO2 / 1000;
+            foodCO2 = foodCO2 / 1000;
+            consumptionCO2 = consumptionCO2 / 1000;
+
+            const totalCO2 = transportCO2 + energyCO2 + foodCO2 + consumptionCO2;
+
+            // 결과 표시
+            displayResults(totalCO2, transportCO2, energyCO2, foodCO2, consumptionCO2);
+            updateSteps();
+        }
+
+        function displayResults(total, transport, energy, food, consumption) {
+            document.getElementById('totalCO2').textContent = total.toFixed(1);
+            document.getElementById('transportCO2').textContent = transport.toFixed(1) + ' t';
+            document.getElementById('energyCO2').textContent = energy.toFixed(1) + ' t';
+            document.getElementById('foodCO2').textContent = food.toFixed(1) + ' t';
+            document.getElementById('consumptionCO2').textContent = consumption.toFixed(1) + ' t';
+
+            // 비교 텍스트
+            const comparisonDiv = document.getElementById('comparisonText');
+            let comparisonClass = '';
+            let comparisonText = '';
+
+            if (total <= 2.0) {
+                comparisonClass = 'result-excellent';
+                comparisonText = '🌟 Excellent! Below Paris Agreement target';
+            } else if (total <= 4.6) {
+                comparisonClass = 'result-good';
+                comparisonText = '👍 Good! Below world average';
+            } else if (total <= 8.8) {
+                comparisonClass = 'result-average';
+                comparisonText = '⚠️ Average. Room for improvement';
+            } else {
+                comparisonClass = 'result-poor';
+                comparisonText = '📈 High impact. Action needed';
+            }
+
+            comparisonDiv.className = `text-sm font-medium p-3 rounded-lg text-white ${comparisonClass}`;
+            comparisonDiv.textContent = comparisonText;
+
+            // 추천사항
+            generateRecommendations(total, transport, energy, food, consumption);
+        }
+
+        function generateRecommendations(total, transport, energy, food, consumption) {
+            const recommendations = [];
+
+            if (transport > total * 0.3) {
+                recommendations.push("🚲 Consider cycling, walking, or public transport for short trips");
+                recommendations.push("🚗 If driving, consider carpooling or electric vehicles");
+            }
+
+            if (energy > total * 0.3) {
+                recommendations.push("💡 Switch to LED bulbs and energy-efficient appliances");
+                recommendations.push("🔆 Consider solar panels or green energy providers");
+            }
+
+            if (food > total * 0.25) {
+                recommendations.push("🌱 Try more plant-based meals (even 1-2 days per week helps!)");
+                recommendations.push("🥬 Buy local and seasonal produce when possible");
+            }
+
+            if (consumption > total * 0.2) {
+                recommendations.push("♻️ Buy second-hand or refurbished items when possible");
+                recommendations.push("🔄 Repair and reuse items before replacing them");
+            }
+
+            if (total > 8.8) {
+                recommendations.push("🏠 Improve home insulation to reduce energy needs");
+                recommendations.push("📱 Reduce air travel or offset flights when necessary");
+            }
+
+            recommendations.push("🌳 Support carbon offset projects (reforestation, renewable energy)");
+
+            const listHTML = recommendations.map(rec => 
+                `<div class="recommendation-card bg-green-50 p-3 rounded-lg mb-2 text-sm">${rec}</div>`
+            ).join('');
+
+            document.getElementById('recommendationsList').innerHTML = listHTML;
+        }
+
+        function updateSteps() {
+            // 단계별 완료 표시
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+            steps.forEach((step, index) => {
+                const stepElement = document.getElementById(step);
+                if (index < 3) { // 처음 3단계는 완료로 표시
+                    stepElement.className = 'step completed';
+                } else if (index === 3) { // 현재 단계
+                    stepElement.className = 'step active';
+                } else {
+                    stepElement.className = 'step pending';
+                }
+            });
+        }
+
+        // 페이지 로드시 초기값 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRenewableDisplay();
+            updateLocalFoodDisplay();
+            updateRecyclingDisplay();
+            updateSecondHandDisplay();
+            
+            // 기본값으로 계산
+            setTimeout(calculateFootprint, 100);
+        });
+    </script>
+</body>
+</html>

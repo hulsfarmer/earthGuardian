@@ -473,6 +473,106 @@ def report_detail(report_type):
                           report_type=report_type,
                           date_str=date_str)
 
+@app.route('/air-quality')
+def air_quality():
+    """실시간 대기질 모니터링 페이지"""
+    return render_template('air_quality.html')
+
+@app.route('/dictionary')
+def environmental_dictionary():
+    """환경 용어 사전 페이지"""
+    return render_template('dictionary.html')
+
+@app.route('/carbon-calculator')
+def carbon_calculator():
+    """개인 탄소발자국 계산기 페이지"""
+    return render_template('carbon_calculator.html')
+
+@app.route('/api/air-quality')
+def get_air_quality():
+    """OpenWeatherMap API를 사용한 대기질 데이터"""
+    city = request.args.get('city', 'Seoul')
+    country = request.args.get('country', 'KR')
+    
+    # OpenWeatherMap API 키 (무료 버전 사용)
+    api_key = "demo_key"  # 실제로는 환경변수에서 가져와야 함
+    
+    try:
+        # 좌표 가져오기
+        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{country}&limit=1&appid={api_key}"
+        
+        # 데모 데이터 반환 (실제 API 키가 없는 경우)
+        if api_key == "demo_key":
+            demo_data = {
+                "location": {
+                    "name": city,
+                    "country": country,
+                    "lat": 37.5665,
+                    "lon": 126.9780
+                },
+                "aqi": {
+                    "main": {
+                        "aqi": 3  # 1-5 scale
+                    },
+                    "components": {
+                        "pm2_5": 25.3,
+                        "pm10": 45.1,
+                        "o3": 85.2,
+                        "no2": 32.7,
+                        "so2": 8.4,
+                        "co": 890.5
+                    }
+                }
+            }
+            
+            # 도시별 다른 데모 데이터
+            city_data = {
+                "Seoul": {"aqi": 3, "pm2_5": 25.3, "pm10": 45.1},
+                "Tokyo": {"aqi": 2, "pm2_5": 18.7, "pm10": 32.4},
+                "Beijing": {"aqi": 4, "pm2_5": 55.2, "pm10": 89.3},
+                "London": {"aqi": 2, "pm2_5": 12.1, "pm10": 28.7},
+                "New York": {"aqi": 2, "pm2_5": 15.8, "pm10": 31.2},
+                "Mumbai": {"aqi": 4, "pm2_5": 68.4, "pm10": 112.6}
+            }
+            
+            if city in city_data:
+                demo_data["aqi"]["main"]["aqi"] = city_data[city]["aqi"]
+                demo_data["aqi"]["components"]["pm2_5"] = city_data[city]["pm2_5"]
+                demo_data["aqi"]["components"]["pm10"] = city_data[city]["pm10"]
+            
+            return jsonify(demo_data)
+        
+        # 실제 API 호출 코드 (API 키가 있는 경우)
+        geo_response = requests.get(geo_url)
+        geo_data = geo_response.json()
+        
+        if not geo_data:
+            return jsonify({"error": "City not found"}), 404
+            
+        lat = geo_data[0]['lat']
+        lon = geo_data[0]['lon']
+        
+        # 대기질 데이터 가져오기
+        aqi_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
+        aqi_response = requests.get(aqi_url)
+        aqi_data = aqi_response.json()
+        
+        result = {
+            "location": {
+                "name": geo_data[0]['name'],
+                "country": geo_data[0]['country'],
+                "lat": lat,
+                "lon": lon
+            },
+            "aqi": aqi_data['list'][0]
+        }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error fetching air quality data: {str(e)}")
+        return jsonify({"error": "Failed to fetch air quality data"}), 500
+
 if __name__ == '__main__':
     # NLTK 데이터 다운로드
     try:

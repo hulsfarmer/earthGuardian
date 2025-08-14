@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environmental Dictionary - Earth Guardian</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .term-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .term-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .alphabet-nav {
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .cat-climate { background: #dbeafe; color: #1e40af; }
+        .cat-biodiversity { background: #d1fae5; color: #065f46; }
+        .cat-energy { background: #fef3c7; color: #92400e; }
+        .cat-pollution { background: #fee2e2; color: #991b1b; }
+        .cat-policy { background: #e0e7ff; color: #3730a3; }
+        .cat-technology { background: #f3e8ff; color: #6b21a8; }
+        .cat-general { background: #f3f4f6; color: #374151; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-green-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="block">
+                    <h1 class="text-4xl font-bold hover:text-green-200 transition-colors">Earth Guardian</h1>
+                    <p class="mt-2">Environmental Dictionary</p>
+                </a>
+                <nav class="flex space-x-6">
+                    <a href="/" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-newspaper mr-2"></i>
+                        News
+                    </a>
+                    <a href="/trends" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Trends
+                    </a>
+                    <a href="/reports" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        Reports
+                    </a>
+                    <a href="/air-quality" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-wind mr-2"></i>
+                        Air Quality
+                    </a>
+                    <a href="/dictionary" class="px-4 py-2 rounded-md bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-book mr-2"></i>
+                        Dictionary
+                    </a>
+                    <a href="/carbon-calculator" class="px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-calculator mr-2"></i>
+                        Calculator
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- 검색 및 필터 섹션 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 검색창 -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search mr-1"></i>
+                        Search Terms
+                    </label>
+                    <input type="text" id="searchInput" placeholder="Search environmental terms..." 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           oninput="searchTerms()">
+                </div>
+                
+                <!-- 카테고리 필터 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-filter mr-1"></i>
+                        Category Filter
+                    </label>
+                    <select id="categoryFilter" onchange="filterByCategory()" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="all">All Categories</option>
+                        <option value="climate">Climate Change</option>
+                        <option value="biodiversity">Biodiversity</option>
+                        <option value="energy">Energy</option>
+                        <option value="pollution">Pollution</option>
+                        <option value="policy">Policy</option>
+                        <option value="technology">Technology</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 통계 -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600" id="totalTerms">0</div>
+                    <div class="text-sm text-gray-600">Total Terms</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="filteredTerms">0</div>
+                    <div class="text-sm text-gray-600">Showing</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="categoriesCount">7</div>
+                    <div class="text-sm text-gray-600">Categories</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="recentlyAdded">12</div>
+                    <div class="text-sm text-gray-600">Recent</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 알파벳 네비게이션 -->
+        <div class="alphabet-nav py-4">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button onclick="scrollToLetter('all')" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors">All</button>
+                    <button onclick="scrollToLetter('A')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">A</button>
+                    <button onclick="scrollToLetter('B')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">B</button>
+                    <button onclick="scrollToLetter('C')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">C</button>
+                    <button onclick="scrollToLetter('D')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">D</button>
+                    <button onclick="scrollToLetter('E')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">E</button>
+                    <button onclick="scrollToLetter('F')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">F</button>
+                    <button onclick="scrollToLetter('G')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">G</button>
+                    <button onclick="scrollToLetter('H')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">H</button>
+                    <button onclick="scrollToLetter('I')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">I</button>
+                    <button onclick="scrollToLetter('J')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">J</button>
+                    <button onclick="scrollToLetter('K')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">K</button>
+                    <button onclick="scrollToLetter('L')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">L</button>
+                    <button onclick="scrollToLetter('M')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">M</button>
+                    <button onclick="scrollToLetter('N')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">N</button>
+                    <button onclick="scrollToLetter('O')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">O</button>
+                    <button onclick="scrollToLetter('P')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">P</button>
+                    <button onclick="scrollToLetter('Q')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">Q</button>
+                    <button onclick="scrollToLetter('R')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">R</button>
+                    <button onclick="scrollToLetter('S')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">S</button>
+                    <button onclick="scrollToLetter('T')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">T</button>
+                    <button onclick="scrollToLetter('U')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">U</button>
+                    <button onclick="scrollToLetter('V')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">V</button>
+                    <button onclick="scrollToLetter('W')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">W</button>
+                    <button onclick="scrollToLetter('X')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">X</button>
+                    <button onclick="scrollToLetter('Y')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">Y</button>
+                    <button onclick="scrollToLetter('Z')" class="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded transition-colors">Z</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 용어 목록 -->
+        <div id="termsList" class="space-y-4">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+
+        <!-- 검색 결과 없음 -->
+        <div id="noResults" class="hidden text-center py-12">
+            <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No terms found</h3>
+            <p class="text-gray-500">Try adjusting your search or filter criteria</p>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div id="pagination" class="flex justify-center mt-8">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2024 Earth Guardian. Comprehensive environmental knowledge for everyone.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 환경 용어 데이터베이스
+        const environmentalTerms = [
+            {
+                term: "Carbon Footprint",
+                definition: "The total amount of greenhouse gases produced directly and indirectly by human activities, usually expressed in equivalent tons of carbon dioxide (CO₂).",
+                category: "climate",
+                examples: ["Transportation emissions", "Energy consumption", "Manufacturing processes"],
+                relatedTerms: ["Carbon Neutral", "Greenhouse Gas", "Climate Change"]
+            },
+            {
+                term: "Biodiversity",
+                definition: "The variety of life on Earth in all its forms, including genetic, species, and ecosystem diversity. It encompasses the variability among living organisms from terrestrial, marine, and aquatic ecosystems.",
+                category: "biodiversity",
+                examples: ["Species richness in rainforests", "Genetic diversity within populations", "Ecosystem variety across landscapes"],
+                relatedTerms: ["Ecosystem", "Conservation", "Endangered Species"]
+            },
+            {
+                term: "Renewable Energy",
+                definition: "Energy derived from natural sources that are replenished at a higher rate than they are consumed, such as sunlight, wind, rain, tides, waves, and geothermal heat.",
+                category: "energy",
+                examples: ["Solar power", "Wind energy", "Hydroelectric power", "Geothermal energy"],
+                relatedTerms: ["Solar Panel", "Wind Turbine", "Clean Energy"]
+            },
+            {
+                term: "Greenhouse Effect",
+                definition: "A natural process where certain gases in Earth's atmosphere trap heat from the sun, keeping the planet warm enough to support life. However, human activities have intensified this effect.",
+                category: "climate",
+                examples: ["Water vapor trapping heat", "CO₂ from fossil fuels", "Methane from agriculture"],
+                relatedTerms: ["Global Warming", "Carbon Dioxide", "Climate Change"]
+            },
+            {
+                term: "Sustainable Development",
+                definition: "Development that meets the needs of the present without compromising the ability of future generations to meet their own needs. It balances economic, social, and environmental factors.",
+                category: "policy",
+                examples: ["Green building practices", "Sustainable agriculture", "Renewable energy adoption"],
+                relatedTerms: ["Sustainability", "ESG", "Circular Economy"]
+            },
+            {
+                term: "Air Quality Index (AQI)",
+                definition: "A numerical scale used to communicate how polluted the air currently is or how polluted it is forecast to become. Higher AQI values indicate greater levels of air pollution.",
+                category: "pollution",
+                examples: ["PM2.5 measurements", "Ozone levels", "NO₂ concentrations"],
+                relatedTerms: ["Particulate Matter", "Smog", "Air Pollution"]
+            },
+            {
+                term: "Carbon Neutral",
+                definition: "Achieving a balance between emitting carbon and absorbing carbon from the atmosphere in carbon sinks, or offsetting emissions through various means to achieve net-zero carbon emissions.",
+                category: "climate",
+                examples: ["Companies offsetting emissions", "Carbon capture projects", "Reforestation initiatives"],
+                relatedTerms: ["Net Zero", "Carbon Offset", "Climate Action"]
+            },
+            {
+                term: "Ecosystem",
+                definition: "A biological community of interacting organisms and their physical environment, functioning as a unit where energy and nutrients cycle through living and non-living components.",
+                category: "biodiversity",
+                examples: ["Forest ecosystems", "Marine ecosystems", "Urban ecosystems"],
+                relatedTerms: ["Habitat", "Food Chain", "Biodiversity"]
+            },
+            {
+                term: "Photovoltaic (PV)",
+                definition: "Technology that converts sunlight directly into electricity using semiconducting materials that exhibit the photovoltaic effect, commonly used in solar panels.",
+                category: "technology",
+                examples: ["Rooftop solar panels", "Solar farms", "Portable solar chargers"],
+                relatedTerms: ["Solar Energy", "Solar Panel", "Clean Technology"]
+            },
+            {
+                term: "Deforestation",
+                definition: "The permanent removal of trees and forest cover, typically for agricultural expansion, urban development, or logging, leading to habitat loss and climate impact.",
+                category: "biodiversity",
+                examples: ["Amazon rainforest clearing", "Palm oil plantations", "Urban expansion"],
+                relatedTerms: ["Forest Conservation", "Habitat Loss", "Reforestation"]
+            },
+            {
+                term: "Electric Vehicle (EV)",
+                definition: "A vehicle that uses one or more electric motors for propulsion, powered by rechargeable battery packs, producing zero direct emissions and reducing transportation-related pollution.",
+                category: "technology",
+                examples: ["Tesla Model 3", "Nissan Leaf", "Electric buses"],
+                relatedTerms: ["Battery Technology", "Sustainable Transportation", "Zero Emissions"]
+            },
+            {
+                term: "Microplastics",
+                definition: "Very small pieces of plastic debris in the environment resulting from the breakdown of larger plastic products, found in oceans, food chain, and even human bodies.",
+                category: "pollution",
+                examples: ["Ocean plastic particles", "Synthetic clothing fibers", "Plastic bag fragments"],
+                relatedTerms: ["Ocean Pollution", "Plastic Waste", "Marine Life"]
+            }
+        ];
+
+        let currentTerms = [...environmentalTerms];
+        let currentPage = 1;
+        const termsPerPage = 6;
+
+        // 페이지 로드시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            displayTerms();
+            updateStats();
+        });
+
+        function displayTerms(terms = currentTerms) {
+            const termsList = document.getElementById('termsList');
+            const startIndex = (currentPage - 1) * termsPerPage;
+            const endIndex = startIndex + termsPerPage;
+            const pageTerms = terms.slice(startIndex, endIndex);
+
+            if (pageTerms.length === 0) {
+                termsList.innerHTML = '';
+                document.getElementById('noResults').classList.remove('hidden');
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('noResults').classList.add('hidden');
+            
+            termsList.innerHTML = pageTerms.map(term => `
+                <div class="term-card bg-white rounded-lg shadow-md p-6" data-category="${term.category}" data-term="${term.term.toLowerCase()}">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold text-gray-800">${highlightSearchTerm(term.term)}</h3>
+                        <span class="category-badge cat-${term.category}">${getCategoryName(term.category)}</span>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4 leading-relaxed">${highlightSearchTerm(term.definition)}</p>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                            Examples:
+                        </h4>
+                        <ul class="text-sm text-gray-600 list-disc list-inside space-y-1">
+                            ${term.examples.map(example => `<li>${example}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="border-t pt-3">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-link text-blue-500 mr-1"></i>
+                            Related Terms:
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${term.relatedTerms.map(relatedTerm => 
+                                `<span class="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full cursor-pointer hover:bg-blue-200 transition-colors" onclick="searchRelatedTerm('${relatedTerm}')">${relatedTerm}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            displayPagination(terms.length);
+            updateStats(terms.length);
+        }
+
+        function displayPagination(totalTerms) {
+            const totalPages = Math.ceil(totalTerms / termsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            if (currentPage > 1) {
+                paginationHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-2 mx-1 bg-white border rounded hover:bg-gray-50">Previous</button>`;
+            }
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<button class="px-3 py-2 mx-1 bg-green-600 text-white border rounded">${i}</button>`;
+                } else {
+                    paginationHTML += `<button onclick="changePage(${i})" class="px-3 py-2 mx-1 bg-white border rounded hover:bg-gray-50">${i}</button>`;
+                }
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-2 mx-1 bg-white border rounded hover:bg-gray-50">Next</button>`;
+            }
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            displayTerms(currentTerms);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function searchTerms() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            
+            currentTerms = environmentalTerms.filter(term => {
+                const matchesSearch = searchTerm === '' || 
+                    term.term.toLowerCase().includes(searchTerm) || 
+                    term.definition.toLowerCase().includes(searchTerm) ||
+                    term.examples.some(example => example.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = categoryFilter === 'all' || term.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            currentPage = 1;
+            displayTerms(currentTerms);
+        }
+
+        function filterByCategory() {
+            searchTerms(); // 검색과 필터를 함께 적용
+        }
+
+        function searchRelatedTerm(term) {
+            document.getElementById('searchInput').value = term;
+            document.getElementById('categoryFilter').value = 'all';
+            searchTerms();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToLetter(letter) {
+            if (letter === 'all') {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('categoryFilter').value = 'all';
+                searchTerms();
+                return;
+            }
+            
+            document.getElementById('searchInput').value = letter;
+            searchTerms();
+            window.scrollTo({ top: 200, behavior: 'smooth' });
+        }
+
+        function highlightSearchTerm(text) {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm || searchTerm.length < 2) return text;
+            
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function getCategoryName(category) {
+            const categoryNames = {
+                'climate': 'Climate',
+                'biodiversity': 'Biodiversity',
+                'energy': 'Energy',
+                'pollution': 'Pollution',
+                'policy': 'Policy',
+                'technology': 'Technology',
+                'general': 'General'
+            };
+            return categoryNames[category] || 'General';
+        }
+
+        function updateStats(filteredCount = null) {
+            document.getElementById('totalTerms').textContent = environmentalTerms.length;
+            document.getElementById('filteredTerms').textContent = filteredCount !== null ? filteredCount : environmentalTerms.length;
+        }
+    </script>
+</body>
+</html>
